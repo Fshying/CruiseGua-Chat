@@ -1,4 +1,5 @@
 /__build/
+server/build/
 .cproject
 .project
 .settings/
