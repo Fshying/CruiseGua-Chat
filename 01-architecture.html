@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.20">
-<meta name="author" content="Rubén Pérez (@anarthal)">
+<meta name="author" content="Fshying">
 <title>Architecture</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -438,7 +438,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="header">
 <h1>Architecture</h1>
 <div class="details">
-<span id="author" class="author">Rubén Pérez (@anarthal)</span><br>
+<span id="author" class="author">Fshying</span><br>
 </div>
 </div>
 <div id="content">
@@ -494,10 +494,10 @@ one that originated the message.</p>
 <div class="paragraph">
 <p>On connection, only the latest messages are loaded. The client can request more
 by sending a <code>requestMessageHistory</code> event. This implements message pagination
-(but see <a href="https://github.com/anarthal/servertech-chat/issues/31">this issue</a>).</p>
+(but see <a href="https://github.com/Fshying/CruiseGua-Chat/issues/31">this issue</a>).</p>
 </div>
 <div class="paragraph">
-<p>See <a href="https://github.com/anarthal/servertech-chat/blob/master/test/integration/api_types.py">this file</a>
+<p>See <a href="https://github.com/Fshying/CruiseGua-Chat/blob/master/test/integration/api_types.py">this file</a>
 for a complete reference on API types.</p>
 </div>
 </div>
@@ -522,7 +522,7 @@ which makes reasoning easy.</p>
 <p>The server is single-threaded, which makes development much easier.
 Measurements are still to be performed to determine whether a multi-threaded
 architecture could pay off (see
-<a href="https://github.com/anarthal/servertech-chat/issues/25">this issue</a>).</p>
+<a href="https://github.com/Fshying/CruiseGua-Chat/issues/25">this issue</a>).</p>
 </div>
 </div>
 <div class="sect2">
@@ -536,7 +536,7 @@ this ID as message ID. Note that this makes the message ID unique per chat room.
 <div class="paragraph">
 <p>In the future, we plan to offload old messages to MySQL,
 to keep Redis structures small (see
-<a href="https://github.com/anarthal/servertech-chat/issues/24">this issue</a>).</p>
+<a href="https://github.com/Fshying/CruiseGua-Chat/issues/24">this issue</a>).</p>
 </div>
 <div class="paragraph">
 <p>We use <a href="https://github.com/boostorg/redis">Boost.Redis</a> to communicate with
@@ -561,13 +561,13 @@ time-critical will also be stored in MySQL.</p>
 MySQL asynchronously. Database setup code (i.e. migrations) are currently
 executed at application startup. A connection is dynamically opened and
 closed for each request (but see
-<a href="https://github.com/anarthal/servertech-chat/issues/48">this issue</a>).</p>
+<a href="https://github.com/Fshying/CruiseGua-Chat/issues/48">this issue</a>).</p>
 </div>
 <div class="paragraph">
 <p>The MySQL hostname is configured via the environment variable <code>MYSQL_HOST</code>.
 The MySQL instance is never exposed to the internet, so no strong credentials
 or encryption are set up (but see
-<a href="https://github.com/anarthal/servertech-chat/issues/45">this issue</a>).</p>
+<a href="https://github.com/Fshying/CruiseGua-Chat/issues/45">this issue</a>).</p>
 </div>
 </div>
 <div class="sect2">
@@ -576,7 +576,7 @@ or encryption are set up (but see
 <p>Clients are authenticated using the <code>/api/login</code> endpoint, using an email and
 a password as credentials. Self-registration is possible using the <code>/api/create-account</code>
 endpoint. At the moment, no email verification is performed
-(see <a href="https://github.com/anarthal/servertech-chat/issues/8">this issue</a>).</p>
+(see <a href="https://github.com/Fshying/CruiseGua-Chat/issues/8">this issue</a>).</p>
 </div>
 <div class="paragraph">
 <p>Passwords are stored in MySQL, hashed using
@@ -726,7 +726,7 @@ set up credentials in your server to authorize your deployment script.
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-09-22 08:54:03 UTC
+Last updated 2026-09-22 09:03:06 UTC
 </div>
 </div>
 </body>
