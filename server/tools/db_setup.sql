@@ -1,5 +1,5 @@
 --
--- Copyright (c) 2023-2025 Ruben Perez Hidalgo (rubenperez038 at gmail dot com)
+-- Copyright (c) 2026 Fshying (Fshying@users.noreply.github.com)
 --
 -- Distributed under the Boost Software License, Version 1.0. (See accompanying
 -- file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,7 +7,7 @@
 
 -- DB setup code. This is executed once at startup.
 -- This should be improved when implementing
--- https://github.com/anarthal/servertech-chat/issues/11
+-- https://github.com/Fshying/CruiseGua-Chat/issues/11
 
 -- Database
 CREATE DATABASE IF NOT EXISTS servertech_chat;

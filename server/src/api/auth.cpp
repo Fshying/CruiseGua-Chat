@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2023-2025 Ruben Perez Hidalgo (rubenperez038 at gmail dot com)
+// Copyright (c) 2026 Fshying (Fshying@users.noreply.github.com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -53,7 +53,7 @@ asio::awaitable<response_builder::response_type> chat::handle_create_account(
 
     // 入库前先对密码做哈希。TODO：这是一个极其耗时的计算，
     // 应当放到线程池中执行。
-    // https://github.com/anarthal/servertech-chat/issues/47
+    // https://github.com/Fshying/CruiseGua-Chat/issues/47
     auto hashed_passwd = hash_password(req_params.password);
 
     // 执行操作
@@ -111,7 +111,7 @@ asio::awaitable<response_builder::response_type> chat::handle_login(request_cont
 
     // 校验密码。TODO：这个函数计算量很大，
     // 应当放到线程池中执行
-    // https://github.com/anarthal/servertech-chat/issues/47
+    // https://github.com/Fshying/CruiseGua-Chat/issues/47
     if (!verify_password(req_params.password, user.hashed_password))
     {
         co_return login_failed(ctx.response());

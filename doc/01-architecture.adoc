@@ -1,5 +1,5 @@
 = Architecture
-Rubén Pérez (@anarthal)
+Fshying
 
 == Overview
 
@@ -33,9 +33,9 @@ one that originated the message.
 
 On connection, only the latest messages are loaded. The client can request more
 by sending a `requestMessageHistory` event. This implements message pagination
-(but see https://github.com/anarthal/servertech-chat/issues/31[this issue]).
+(but see https://github.com/Fshying/CruiseGua-Chat/issues/31[this issue]).
 
-See https://github.com/anarthal/servertech-chat/blob/master/test/integration/api_types.py[this file]
+See https://github.com/Fshying/CruiseGua-Chat/blob/master/test/integration/api_types.py[this file]
 for a complete reference on API types.
 
 == Server architecture
@@ -54,7 +54,7 @@ which makes reasoning easy.
 The server is single-threaded, which makes development much easier.
 Measurements are still to be performed to determine whether a multi-threaded
 architecture could pay off (see 
-https://github.com/anarthal/servertech-chat/issues/25[this issue]).
+https://github.com/Fshying/CruiseGua-Chat/issues/25[this issue]).
 
 === Redis
 
@@ -65,7 +65,7 @@ this ID as message ID. Note that this makes the message ID unique per chat room.
 
 In the future, we plan to offload old messages to MySQL,
 to keep Redis structures small (see
-https://github.com/anarthal/servertech-chat/issues/24[this issue]).
+https://github.com/Fshying/CruiseGua-Chat/issues/24[this issue]).
 
 We use https://github.com/boostorg/redis[Boost.Redis] to communicate with
 Redis asynchronously. Following the recommended Boost.Redis architecture,
@@ -85,19 +85,19 @@ We use https://github.com/boostorg/mysql[Boost.MySQL] to communicate with
 MySQL asynchronously. Database setup code (i.e. migrations) are currently
 executed at application startup. A connection is dynamically opened and
 closed for each request (but see
-https://github.com/anarthal/servertech-chat/issues/48[this issue]).
+https://github.com/Fshying/CruiseGua-Chat/issues/48[this issue]).
 
 The MySQL hostname is configured via the environment variable `MYSQL_HOST`.
 The MySQL instance is never exposed to the internet, so no strong credentials
 or encryption are set up (but see
-https://github.com/anarthal/servertech-chat/issues/45[this issue]).
+https://github.com/Fshying/CruiseGua-Chat/issues/45[this issue]).
 
 === Authentication
 
 Clients are authenticated using the `/api/login` endpoint, using an email and
 a password as credentials. Self-registration is possible using the `/api/create-account`
 endpoint. At the moment, no email verification is performed
-(see https://github.com/anarthal/servertech-chat/issues/8[this issue]).
+(see https://github.com/Fshying/CruiseGua-Chat/issues/8[this issue]).
 
 Passwords are stored in MySQL, hashed using
 https://en.wikipedia.org/wiki/Scrypt[scrypt].

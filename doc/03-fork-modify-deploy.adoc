@@ -1,5 +1,5 @@
 = Instant Deployment: From GitHub Fork to Public Server in Minutes
-Rubén Pérez (@anarthal)
+Fshying
 
 Would you like to have your own running server?
 
@@ -70,7 +70,7 @@ Do you already have a Linux server with SSH enabled? Then you can use it by
 skipping the EC2 instance creation, just following the
 xref:authorize-gha[GitHub Actions authorization] section.
 
-The https://github.com/anarthal/servertech-chat/blob/master/tools/deploy.sh[deployment script]
+The https://github.com/Fshying/CruiseGua-Chat/blob/master/tools/deploy.sh[deployment script]
 relies on Docker. It will try to install it using `yum`, since this is what
 the default Amazon Linux images support. You may need to modify the Docker
 installation lines to match your server flavor. The rest of the script is
@@ -79,5 +79,5 @@ distribution-agnostic.
 == Stuck with deployments?
 
 We're also happy to provide help if you're stuck. Please
-https://github.com/anarthal/servertech-chat/issues/new[open an issue in the repository]
+https://github.com/Fshying/CruiseGua-Chat/issues/new[open an issue in the repository]
 or https://cpplang.slack.com/archives/C06BRML5EFK[contact us in Slack].

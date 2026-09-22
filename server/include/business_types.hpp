@@ -1,3 +1,10 @@
+//
+// Copyright (c) 2026 Fshying (Fshying@users.noreply.github.com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+
 #ifndef SERVERTECHCHAT_SERVER_INCLUDE_BUSINESS_TYPES_HPP
 #define SERVERTECHCHAT_SERVER_INCLUDE_BUSINESS_TYPES_HPP
 

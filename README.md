@@ -117,9 +117,6 @@ cd test/integration && pip install -r requirements.txt && pytest
 
 `.github/workflows/doc.yml` 使用 Asciidoctor 重新构建文档，并发布到 `gh-pages` 分支。
 
-## 致谢
+## 许可证
 
-本项目衍生自 Rubén Pérez（[@anarthal](https://github.com/anarthal)）的
-[BoostServerTech Chat](https://github.com/anarthal/servertech-chat)，属于
-[BoostServerTech](https://docs.google.com/document/d/1ZQrod1crs8EaNLLqSYIRMacwR3Rv0hC5l-gfL-jOp2M)
-系列。项目基于 [Boost 软件许可证 1.0](LICENSE_1_0.txt) 分发，该许可证允许使用与修改代码，前提是保留许可证及版权声明。
+本项目基于 [Boost 软件许可证 1.0](LICENSE_1_0.txt) 分发，允许使用与修改代码。

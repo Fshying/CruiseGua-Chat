@@ -8,8 +8,8 @@ import useIsSmallScreen from "@/hooks/useIsSmallScreen";
 // The common Header with the Boost logo shown in all pages
 
 const links = [
-  { text: "Source code", href: "https://github.com/anarthal/servertech-chat" },
-  { text: "Docs", href: "https://anarthal.github.io/servertech-chat/" },
+  { text: "Source code", href: "https://github.com/Fshying/CruiseGua-Chat" },
+  { text: "Docs", href: "https://github.com/Fshying/CruiseGua-Chat/tree/master/doc" },
 ];
 
 const BoostLogo = ({ height }: { height: number }) => {
@@ -60,7 +60,7 @@ export const SmallHeader = ({
       )}
       <div className="flex flex-1 justify-between">
         <BoostLogo height={40} />
-        <a href="https://github.com/anarthal/servertech-chat" className="pl-2">
+        <a href="https://github.com/Fshying/CruiseGua-Chat" className="pl-2">
           <GitHubIcon style={{ width: "40px", height: "40px" }} />
         </a>
       </div>

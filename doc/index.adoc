@@ -1,5 +1,5 @@
 = BoostServerTech Chat
-Rubén Pérez (@anarthal)
+Fshying
 
 Welcome to BoostServerTech Chat documentation!
 
@@ -88,14 +88,14 @@ xref:03-fork-modify-deploy.adoc#[this section] to learn more.
 We always welcome contributions! As a fist step, please
 https://cpplang.slack.com/archives/C06BRML5EFK[join our Slack discussion group]
 and have a look at
-https://github.com/anarthal/servertech-chat/issues[the open issues].
+https://github.com/Fshying/CruiseGua-Chat/issues[the open issues].
 
 You can contribute by submitting PRs, writing docs or tests, or opening
 issues if you've found a bug.
 
 If you want to share any piece of feedback with us, either positive or negative,
 you can do so by commenting on
-https://github.com/anarthal/servertech-chat/issues/40[this issue].
+https://github.com/Fshying/CruiseGua-Chat/issues/40[this issue].
 
 If you're a Boost author and you would like to showcase your library, you can
 fork this project and modify it to build your own BoostServerTech application.

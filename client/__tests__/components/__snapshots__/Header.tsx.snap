@@ -28,7 +28,7 @@ exports[`Header Large header 1`] = `
       >
         <a
           class="no-underline text-2xl text-black"
-          href="https://github.com/anarthal/servertech-chat"
+          href="https://github.com/Fshying/CruiseGua-Chat"
         >
           Source code
         </a>
@@ -38,7 +38,7 @@ exports[`Header Large header 1`] = `
       >
         <a
           class="no-underline text-2xl text-black"
-          href="https://anarthal.github.io/servertech-chat/"
+          href="https://github.com/Fshying/CruiseGua-Chat/tree/master/doc"
         >
           Docs
         </a>
@@ -73,7 +73,7 @@ exports[`Header Small header: arrow not shown 1`] = `
       </a>
       <a
         class="pl-2"
-        href="https://github.com/anarthal/servertech-chat"
+        href="https://github.com/Fshying/CruiseGua-Chat"
       >
         <svg
           aria-hidden="true"
@@ -133,7 +133,7 @@ exports[`Header Small header: arrow shown 1`] = `
       </a>
       <a
         class="pl-2"
-        href="https://github.com/anarthal/servertech-chat"
+        href="https://github.com/Fshying/CruiseGua-Chat"
       >
         <svg
           aria-hidden="true"
@@ -193,7 +193,7 @@ exports[`Header Small header: arrow shown disabled when callback is undefined 1`
       </a>
       <a
         class="pl-2"
-        href="https://github.com/anarthal/servertech-chat"
+        href="https://github.com/Fshying/CruiseGua-Chat"
       >
         <svg
           aria-hidden="true"

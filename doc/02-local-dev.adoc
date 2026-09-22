@@ -1,5 +1,5 @@
 = Running the application locally
-Rubén Pérez (@anarthal)
+Fshying
 
 Do you want to perform some development?
 
