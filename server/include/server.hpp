@@ -15,12 +15,12 @@
 
 namespace chat {
 
-// Forward declaration
+// 前向声明
 class shared_state;
 
-// Runs the HTTP server. It will accept connections in a loop until
-// the underlying I/O context is stopped. Throws an exception
-// if the listener is unable to launch (e.g. the port to bind to is not available).
+// 运行 HTTP 服务器。它会在循环中接受连接，直到
+// 底层的 I/O 上下文被停止。如果监听器无法启动
+// （例如要绑定的端口不可用），则抛出异常。
 boost::asio::awaitable<void> run_server(
     boost::asio::ip::tcp::endpoint listening_endpoint,
     std::shared_ptr<shared_state> state

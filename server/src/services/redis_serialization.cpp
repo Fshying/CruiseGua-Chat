@@ -26,8 +26,8 @@ using boost::system::result;
 
 namespace {
 
-// Message as stored in Redis. Note that this contains no ID, since
-// message IDs are stream IDs.
+// 存储在 Redis 中的消息。注意它不含 ID，
+// 因为消息 ID 就是 stream 的 ID。
 struct redis_wire_message
 {
     std::string_view content;
@@ -53,13 +53,13 @@ result<std::vector<message_batch>> chat::parse_room_history_batch(node_span node
     std::vector<message_batch> res;
     error_code ec;
 
-    // We need a one-pass parser. Every response has the following format:
-    // list of MessageEntry:
-    //    MessageEntry[0]: string (id)
-    //    MessageEntry[1]: list<string> (key-value pairs; always an even number)
-    // Since manipulating nodes is cumbersome, we have a single key named "payload",
-    // with a single value containing a JSON
-    // This function is capable of parsing multiple, batched responses
+    // 我们需要一个单遍（one-pass）解析器。每个响应的格式如下：
+    // MessageEntry 组成的列表：
+    //    MessageEntry[0]：string（id）
+    //    MessageEntry[1]：list<string>（键值对；个数总是偶数）
+    // 由于操作这些节点相当繁琐，我们只用一个名为 "payload" 的键，
+    // 其单个值中包含一个 JSON
+    // 本函数能够解析多个批量返回的响应
     enum state_t
     {
         wants_level0_list,
@@ -80,7 +80,7 @@ result<std::vector<message_batch>> chat::parse_room_history_batch(node_span node
     {
         if (data.state == wants_level0_list)
         {
-            // The top-level list, indicating a new response
+            // 顶层列表，表示一个新响应开始
             if (node.data_type != resp3::type::array)
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
             if (node.depth != 0u)
@@ -90,18 +90,18 @@ result<std::vector<message_batch>> chat::parse_room_history_batch(node_span node
         }
         else if (data.state == wants_level0_or_entry_list)
         {
-            // We need either a new response or a new message in the current response
+            // 这里要么是新响应，要么是当前响应中的新消息
             if (node.data_type != resp3::type::array)
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
             if (node.depth == 0u)
             {
-                // New response
+                // 新响应
                 res.emplace_back();
                 data.state = wants_level0_or_entry_list;
             }
             else if (node.depth == 1u)
             {
-                // New message
+                // 新消息
                 if (node.aggregate_size != 2u)
                     CHAT_RETURN_ERROR(errc::redis_parse_error)
                 data.state = wants_id;
@@ -113,7 +113,7 @@ result<std::vector<message_batch>> chat::parse_room_history_batch(node_span node
         }
         else if (data.state == wants_id)
         {
-            // We're waiting for the stream ID field
+            // 正在等待 stream 的 ID 字段
             if (node.data_type != resp3::type::blob_string)
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
             if (node.depth != 2u)
@@ -123,19 +123,19 @@ result<std::vector<message_batch>> chat::parse_room_history_batch(node_span node
         }
         else if (data.state == wants_attr_list)
         {
-            // We're waiting for the stream record attribute list
+            // 正在等待 stream 记录的属性列表
             if (node.data_type != resp3::type::array)
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
             if (node.depth != 2u)
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
-            if (node.aggregate_size != 2u)  // single key/value pair, serialized as JSON
+            if (node.aggregate_size != 2u)  // 单个键值对，序列化为 JSON
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
             data.state = wants_key;
         }
         else if (data.state == wants_key)
         {
-            // We're in the attribute list, waiting for the key. Our messages
-            // only have one key named "payload"
+            // 我们在属性列表中等待键。我们的消息
+            // 只有一个名为 "payload" 的键
             if (node.data_type != resp3::type::blob_string)
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
             if (node.depth != 3u)
@@ -146,14 +146,14 @@ result<std::vector<message_batch>> chat::parse_room_history_batch(node_span node
         }
         else if (data.state == wants_value)
         {
-            // We're in the attribute list, waiting for the value. It contains
-            // a JSON payload with the message contents
+            // 我们在属性列表中等待值。它包含
+            // 一个 JSON payload，里面是消息内容
             if (node.data_type != resp3::type::blob_string)
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
             if (node.depth != 3u)
                 CHAT_RETURN_ERROR(errc::redis_parse_error)
 
-            // Parse payload
+            // 解析 payload
             auto jv = boost::json::parse(node.value, ec);
             if (ec)
                 CHAT_RETURN_ERROR(ec)
@@ -162,13 +162,13 @@ result<std::vector<message_batch>> chat::parse_room_history_batch(node_span node
                 CHAT_RETURN_ERROR(msg.error())
             res.back().messages.push_back(to_message(msg.value(), *data.id));
 
-            // Reset parser state
+            // 重置解析器状态
             data.state = wants_level0_or_entry_list;
             data.id = nullptr;
         }
     }
 
-    // Corrupted response: unfinished message or response
+    // 响应已损坏：消息或响应还没有结束
     if (data.state != wants_level0_or_entry_list && data.state != wants_level0_list)
         CHAT_RETURN_ERROR(errc::redis_parse_error)
 
@@ -177,19 +177,19 @@ result<std::vector<message_batch>> chat::parse_room_history_batch(node_span node
 
 result<std::vector<std::string>> chat::parse_batch_xadd_response(node_span nodes)
 {
-    // Pre-allocate memory
+    // 预分配内存
     std::vector<std::string> res;
     res.reserve(nodes.size());
 
     for (const auto& node : nodes)
     {
-        // Verify that the shape of the response matches
+        // 校验响应的结构是否符合预期
         if (node.depth != 0u)
             CHAT_RETURN_ERROR(errc::redis_parse_error)
         else if (node.data_type != resp3::type::blob_string)
             CHAT_RETURN_ERROR(errc::redis_parse_error)
 
-        // Add to response
+        // 加入结果
         res.push_back(node.value);
     }
 
@@ -198,9 +198,9 @@ result<std::vector<std::string>> chat::parse_batch_xadd_response(node_span nodes
 
 std::string chat::serialize_redis_message(const message& msg)
 {
-    // Construct the wire message
+    // 构造线格式消息
     redis_wire_message redis_msg{msg.content, serialize_timestamp(msg.timestamp), msg.user_id};
 
-    // Serialize it to JSON
+    // 序列化为 JSON
     return boost::json::serialize(boost::json::value_from(redis_msg));
 }

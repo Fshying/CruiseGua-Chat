@@ -25,13 +25,13 @@ using boost::system::error_code;
 
 BOOST_AUTO_TEST_SUITE(redis_serialization)
 
-// Creates a node with array type
+// 创建一个 array 类型的节点
 static resp3::node array_node(std::size_t size, std::size_t depth)
 {
     return {resp3::type::array, size, depth, ""};
 }
 
-// Creates a node with string type
+// 创建一个 string 类型的节点
 static resp3::node string_node(std::size_t depth, std::string content)
 {
     return {
@@ -44,29 +44,29 @@ static resp3::node string_node(std::size_t depth, std::string content)
 
 BOOST_AUTO_TEST_CASE(parse_room_history_success)
 {
-    // Input data
+    // 输入数据
     std::vector<resp3::node> nodes{
-        // 1st room top-level node
+        // 第 1 个房间的顶层节点
         array_node(2, 0),
-        // first message
+        // 第一条消息
         array_node(2, 1),
         string_node(2, "100-1"),
         array_node(2, 2),
         string_node(3, "payload"),
         string_node(3, R"%({"user_id":11,"content":"Test message 2","timestamp":1691666793896})%"),
-        // second message
+        // 第二条消息
         array_node(2, 1),
         string_node(2, "90-1"),
         array_node(2, 2),
         string_node(3, "payload"),
         string_node(3, R"%({"user_id":12,"content":"Test message 3","timestamp":1691666793897})%"),
 
-        // 2nd room top-level node; room has no messages
+        // 第 2 个房间的顶层节点；该房间没有消息
         array_node(0, 0),
 
-        // 3rd room top-level node
+        // 第 3 个房间的顶层节点
         array_node(1, 0),
-        // first message
+        // 第一条消息
         array_node(2, 1),
         string_node(2, "150-1"),
         array_node(2, 2),
@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE(parse_room_history_success)
         string_node(3, R"%({"user_id":11,"content":"msg7","timestamp":1691666793898})%"),
     };
 
-    // Call the function
+    // 调用函数
     auto res = parse_room_history_batch(nodes);
     const auto& val = res.value();
 
-    // Validate
+    // 校验结果
     BOOST_TEST(val.size() == 3u);
     BOOST_TEST(val[0].messages.size() == 2u);
     BOOST_TEST(val[1].messages.size() == 0u);
@@ -102,28 +102,28 @@ BOOST_AUTO_TEST_CASE(parse_room_history_success)
 
 BOOST_AUTO_TEST_CASE(parse_room_history_empty)
 {
-    // Input data
+    // 输入数据
     std::vector<resp3::node> nodes{};
 
-    // Call the function
+    // 调用函数
     auto res = parse_room_history_batch(nodes);
     const auto& val = res.value();
 
-    // Validate
+    // 校验结果
     BOOST_TEST(val.size() == 0u);
 }
 
 BOOST_AUTO_TEST_CASE(parse_room_history_error)
 {
-    // Input data
+    // 输入数据
     std::vector<resp3::node> nodes{
-        // top-level node
+        // 顶层节点
         array_node(1, 0),
-        // first message
+        // 第一条消息
         array_node(2, 1),
         string_node(2, "100-1"),
         array_node(2, 2),
-        array_node(0, 0),  // this top-level node shouldn't be here
+        array_node(0, 0),  // 这个顶层节点不该出现在这里
         string_node(3, "payload"),
         string_node(
             3,
@@ -131,65 +131,65 @@ BOOST_AUTO_TEST_CASE(parse_room_history_error)
         ),
     };
 
-    // Call the function
+    // 调用函数
     auto res = parse_room_history_batch(nodes);
     BOOST_TEST(res.error() == error_code(errc::redis_parse_error));
 }
 
 BOOST_AUTO_TEST_CASE(parse_string_list_success)
 {
-    // Input data
+    // 输入数据
     std::vector<resp3::node> nodes{string_node(0, "s1"), string_node(0, "s2"), string_node(0, "mykey")};
 
-    // Call the function
+    // 调用函数
     auto res = parse_batch_xadd_response(nodes);
     auto& val = res.value();
 
-    // Validate
+    // 校验结果
     BOOST_TEST(val == std::vector<std::string>({"s1", "s2", "mykey"}));
 }
 
 BOOST_AUTO_TEST_CASE(parse_string_list_empty)
 {
-    // Input data
+    // 输入数据
     std::vector<resp3::node> nodes{};
 
-    // Call the function
+    // 调用函数
     auto res = parse_batch_xadd_response(nodes);
     auto& val = res.value();
 
-    // Validate
+    // 校验结果
     BOOST_TEST(val.size() == 0u);
 }
 
 BOOST_AUTO_TEST_CASE(parse_string_list_error)
 {
-    // Input data
+    // 输入数据
     std::vector<resp3::node> nodes{
         string_node(0, "s1"),
-        array_node(1, 0),  // This shouldn't be here
+        array_node(1, 0),  // 这里不该出现这个节点
         string_node(0, "s1"),
     };
 
-    // Call the function
+    // 调用函数
     auto res = parse_batch_xadd_response(nodes);
     BOOST_TEST(res.error() == error_code(errc::redis_parse_error));
 }
 
 BOOST_AUTO_TEST_CASE(serialize_redis_message_success)
 {
-    // Input data
+    // 输入数据
     message input{
         "100-10",
         "hello world!",
         timestamp_t{std::chrono::milliseconds(123)},
-        11,  // user_id
+        11,  // 用户 ID
     };
 
-    // Call the function
+    // 调用函数
     auto output = serialize_redis_message(input);
 
-    // Validate
+    // 校验结果
     const char* expected = R"%({"user_id":11,"content":"hello world!","timestamp":123})%";
     BOOST_TEST(boost::json::parse(output) == boost::json::parse(expected));
 }

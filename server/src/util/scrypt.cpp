@@ -34,7 +34,7 @@ static result<std::uint64_t> parse_int(std::string_view from)
 
 static result<scrypt_params> parse_phc_params(std::string_view from)
 {
-    // sane upper bounds
+    // 合理的上界
     constexpr std::uint64_t max_ln = 20;
     constexpr std::uint64_t max_r = 20;
 
@@ -42,18 +42,18 @@ static result<scrypt_params> parse_phc_params(std::string_view from)
 
     while (true)
     {
-        // Get a parameter
+        // 取出一个参数
         auto last = from.find(',');
         auto serialized_param = from.substr(0, last);
 
-        // Split it into key/value
+        // 拆成键/值
         auto param_eq = serialized_param.find('=');
         if (param_eq == std::string_view::npos)
             CHAT_RETURN_ERROR(errc::invalid_password_hash)
         auto name = serialized_param.substr(0, param_eq);
         auto value_str = serialized_param.substr(param_eq + 1);
 
-        // Parse it. Ignore unknown params
+        // 解析它。忽略未知参数
         if (name == "ln")
         {
             auto value = parse_int(value_str);
@@ -77,13 +77,13 @@ static result<scrypt_params> parse_phc_params(std::string_view from)
             auto value = parse_int(value_str);
             if (value.has_error())
                 CHAT_RETURN_ERROR(errc::invalid_password_hash)
-            // p != 1 not supported (nor recommended by owasp)
+            // 不支持 p != 1（OWASP 也不推荐）
             if (*value != 1u)
                 CHAT_RETURN_ERROR(errc::invalid_password_hash)
             res.p = value.value();
         }
 
-        // Go to next
+        // 处理下一个
         if (last == std::string_view::npos)
             break;
         else
@@ -95,21 +95,21 @@ static result<scrypt_params> parse_phc_params(std::string_view from)
 
 result<scrypt_data> chat::scrypt_phc_parse(std::string_view from)
 {
-    // First $ identifier
+    // 开头的 $ 标识符
     if (from.empty() || from.front() != '$')
         CHAT_RETURN_ERROR(errc::invalid_password_hash)
     from = from.substr(1);
 
-    // Algorithm identifier
+    // 算法标识符
     auto count = from.find('$');
     if (count == std::string_view::npos)
         CHAT_RETURN_ERROR(errc::invalid_password_hash)
     auto algo_id = from.substr(0, count);
     if (algo_id != "scrypt")
-        CHAT_RETURN_ERROR(errc::invalid_password_hash)  // Algorithm we don't know
+        CHAT_RETURN_ERROR(errc::invalid_password_hash)  // 我们不认识的算法
     from = from.substr(count + 1);
 
-    // Params field. Spec says this is optional, but for now we require it
+    // 参数字段。规范中说它是可选的，但我们目前要求必须有
     count = from.find('$');
     if (count == std::string_view::npos)
         CHAT_RETURN_ERROR(errc::invalid_password_hash)
@@ -119,7 +119,7 @@ result<scrypt_data> chat::scrypt_phc_parse(std::string_view from)
         return params_result.error();
     from = from.substr(count + 1);
 
-    // Salt field. Spec says this is optional, but for now we require it
+    // 盐字段。规范中说它是可选的，但我们目前要求必须有
     count = from.find('$');
     if (count == std::string_view::npos)
         CHAT_RETURN_ERROR(errc::invalid_password_hash)
@@ -129,7 +129,7 @@ result<scrypt_data> chat::scrypt_phc_parse(std::string_view from)
         CHAT_RETURN_ERROR(errc::invalid_password_hash)
     from = from.substr(count + 1);
 
-    // Hash field (rest of the string)
+    // 哈希字段（字符串剩余部分）
     auto hash_result = base64_decode(from, false);
     if (hash_result.has_error())
         CHAT_RETURN_ERROR(errc::invalid_password_hash)
@@ -153,7 +153,7 @@ std::string chat::scrypt_phc_serialize(
     return oss.str();
 }
 
-// Hashes the given password with the given salt and params
+// 用给定的盐和参数对给定密码做哈希
 std::array<unsigned char, hash_size> chat::scrypt_generate_hash(
     std::string_view passwd,
     scrypt_params params,
@@ -169,7 +169,7 @@ std::array<unsigned char, hash_size> chat::scrypt_generate_hash(
         passwd.size(),
         salt.data(),
         salt.size(),
-        1 << params.ln,  // base 2 log
+        1 << params.ln,  // 以 2 为底的对数
         params.r,
         params.p,
         max_memory,
@@ -186,7 +186,7 @@ std::array<unsigned char, hash_size> chat::scrypt_generate_hash(
     return res;
 }
 
-// Compares two blobs, in a way that prevents timing attacks
+// 比较两段数据，且比较过程能防止时序攻击（timing attack）
 bool chat::time_safe_equals(std::span<const unsigned char> s1, std::span<const unsigned char> s2) noexcept
 {
     return CRYPTO_memcmp(s1.data(), s2.data(), std::min(s1.size(), s2.size())) == 0 && s1.size() == s2.size();

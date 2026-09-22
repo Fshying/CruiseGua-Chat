@@ -13,11 +13,11 @@
 
 namespace chat {
 
-// Hashes a password using scrypt and a random salt. Returns a PHC-format string
-// that can be inserted in DB and passed to verify_password
+// 使用 scrypt 和随机盐对密码做哈希。返回一个 PHC 格式的字符串，
+// 它可以存入数据库，并传给 verify_password
 std::string hash_password(std::string_view passwd);
 
-// Checks whether the incoming password matches the given hashed password
+// 检查传入的密码是否与给定的密码哈希匹配
 bool verify_password(std::string_view passwd, std::string_view hashed_passwd);
 
 }  // namespace chat

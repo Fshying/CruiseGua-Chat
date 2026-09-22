@@ -43,13 +43,13 @@ public:
 
     void start_run() final override
     {
-        // The host to connect to. Defaults to localhost
+        // 要连接的主机。默认是 localhost
         const char* host_c_str = std::getenv("REDIS_HOST");
         std::string host = host_c_str ? host_c_str : "localhost";
 
         redis::config cfg;
         cfg.addr.host = std::move(host);
-        cfg.health_check_interval = std::chrono::seconds::zero();  // Disable health checks for now
+        cfg.health_check_interval = std::chrono::seconds::zero();  // 暂时禁用健康检查
         conn_.async_run(cfg, asio::detached);
     }
 
@@ -61,8 +61,8 @@ public:
     {
         assert(!input.empty());
 
-        // Compose the request. XREVRANGE will get all messages for a room,
-        // since the beginning, in reverse order, up to message_batch_size
+        // 组装请求。XREVRANGE 会从最开始起按逆序取出
+        // 某个房间的所有消息，最多取 message_batch_size 条
         redis::request req;
         for (const auto& room_req : input)
         {
@@ -72,15 +72,15 @@ public:
             req.push("XREVRANGE", room_req.room_id, stream_ref, "-", "COUNT", message_batch_size);
         }
 
-        // Run it
+        // 执行
         redis::generic_response res;
         error_code ec;
         co_await conn_.async_exec(req, res, asio::redirect_error(ec));
         if (ec)
             co_return ec;
 
-        // Verify success. If any of the nodes contains a Redis error (e.g.
-        // because we sent an invalid command), this will contain an error.
+        // 校验是否成功。只要任一节点包含 Redis 错误
+        // （例如我们发了非法命令），这里就会带有错误。
         if (res.has_error())
         {
             ec = errc::redis_command_failed;
@@ -88,12 +88,12 @@ public:
             co_return ec;
         }
 
-        // Parse the response
+        // 解析响应
         auto result = parse_room_history_batch(*res);
         if (result.has_error())
             co_return result.error();
 
-        // Set the has_more flag
+        // 设置 has_more 标志
         for (auto& batch : *result)
             batch.has_more = batch.messages.size() >= message_batch_size;
 
@@ -105,21 +105,21 @@ public:
         std::span<const message> messages
     ) final override
     {
-        // Compose the request. This appends a message to the given room and
-        // auto-assigns it an ID.
+        // 组装请求。它会把消息追加到指定房间，
+        // 并自动分配 ID。
         redis::request req;
         for (const auto& msg : messages)
             req.push("XADD", room_id, "*", "payload", serialize_redis_message(msg));
 
-        // Execute it
+        // 执行
         redis::generic_response res;
         error_code ec;
         co_await conn_.async_exec(req, res, asio::redirect_error(ec));
         if (ec)
             co_return ec;
 
-        // Verify success. If any of the nodes contains a Redis error (e.g.
-        // because we sent an invalid command), this will contain an error.
+        // 校验是否成功。只要任一节点包含 Redis 错误
+        // （例如我们发了非法命令），这里就会带有错误。
         if (res.has_error())
         {
             ec = errc::redis_command_failed;
@@ -127,7 +127,7 @@ public:
             co_return ec;
         }
 
-        // Parse the response
+        // 解析响应
         auto result = parse_batch_xadd_response(*res);
         if (result.has_error())
             co_return result.error();
@@ -140,18 +140,18 @@ public:
         std::chrono::seconds ttl
     ) final override
     {
-        // Compose the request. NX prevents key overwrites, EX sets the TTL
+        // 组装请求。NX 阻止覆盖已存在的键，EX 设置 TTL
         redis::request req;
         req.push("SET", key, value, "NX", "EX", ttl.count());
 
-        // Execute it
+        // 执行
         redis::response<std::optional<std::string>> res;
         error_code ec;
         co_await conn_.async_exec(req, res, asio::redirect_error(ec));
         if (ec)
             co_return ec;
 
-        // Check
+        // 检查结果
         auto& result = std::get<0>(res);
         if (result.has_error())
         {
@@ -164,18 +164,18 @@ public:
 
     asio::awaitable<result<std::int64_t>> get_int_key(std::string_view key) final override
     {
-        // Compose the request
+        // 组装请求
         redis::request req;
         req.push("GET", key);
 
-        // Execute it
+        // 执行
         redis::response<std::optional<std::int64_t>> res;
         error_code ec;
         co_await conn_.async_exec(req, res, asio::redirect_error(ec));
         if (ec)
             co_return ec;
 
-        // Check for errors
+        // 检查是否有错误
         auto& result = std::get<0>(res);
         if (result.has_error())
         {
@@ -185,7 +185,7 @@ public:
         }
         auto opt = result.value();
 
-        // Check whether the key was present
+        // 检查该键是否存在
         if (opt.has_value())
             co_return opt.value();
         else

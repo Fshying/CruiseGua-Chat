@@ -17,25 +17,25 @@
 #include <string>
 #include <string_view>
 
-// An in-memory publish-subscribe mechanism. Used to broadcast messages between clients.
+// 一个内存中的发布-订阅机制。用于在客户端之间广播消息。
 
 namespace chat {
 
-// Any subscriber must implement this interface
+// 任何订阅者都必须实现这个接口
 class message_subscriber
 {
 public:
     virtual ~message_subscriber() {}
 
-    // Called when a message is received. This function is a coroutine to
-    // allow async code within it.
+    // 收到消息时调用。该函数是协程，
+    // 以便在其中编写异步代码。
     virtual boost::asio::awaitable<void> on_message(std::string_view message) = 0;
 };
 
-// This is an interface to reduce compile times.
+// 这是一个用于缩短编译时间的接口。
 class pubsub_service
 {
-    // Implementation of subscribe_guarded
+    // subscribe_guarded 的实现
     struct subscriber_deleter
     {
         pubsub_service& self;
@@ -46,24 +46,23 @@ class pubsub_service
 public:
     virtual ~pubsub_service() {}
 
-    // Subscribes a subscriber object to the given topic IDs. When a message
-    // for any of these topics is received (via a call to publish),
-    // message_subscriber::on_message will be called.
+    // 把订阅者对象订阅到给定的主题 ID 上。当收到这些主题中任意一个的消息时
+    // （即有人调用 publish），就会调用 message_subscriber::on_message。
     virtual void subscribe(
         std::shared_ptr<message_subscriber> subscriber,
         std::span<const std::string_view> topic_ids
     ) = 0;
 
-    // Removes all subscriptions for the given subscriber.
-    // Subscriptions are matched by subscriber identity (i.e. pointer comparison).
-    // If the subscriber doesn't exist, the function is a no-op.
+    // 移除该订阅者的所有订阅。
+    // 订阅按订阅者身份匹配（即比较指针）。
+    // 如果该订阅者不存在，此函数不做任何事。
     virtual void unsubscribe(message_subscriber& subscriber) = 0;
 
-    // Publishes a message to the given topic.
-    // All subscribers are notified in parallel, each getting its own coroutine.
+    // 向给定主题发布一条消息。
+    // 所有订阅者会并行收到通知，各自拥有自己的协程。
     virtual void publish(std::string_view topic_id, std::string message) = 0;
 
-    // RAII-style subscribe. When the guard is destroyed, the subscription is removed.
+    // RAII 风格的订阅。guard 被销毁时，订阅会被移除。
     using subscriber_guard = std::unique_ptr<message_subscriber, subscriber_deleter>;
     subscriber_guard subscribe_guarded(
         std::shared_ptr<message_subscriber> subscriber,
@@ -76,8 +75,7 @@ public:
     }
 };
 
-// Create a concrete pubsub_service. The executor is used to launch the coroutines
-// where subscribe callbacks run.
+// 创建具体的 pubsub_service。executor 用于启动运行订阅回调的协程。
 std::unique_ptr<pubsub_service> create_pubsub_service(boost::asio::any_io_executor ex);
 
 }  // namespace chat

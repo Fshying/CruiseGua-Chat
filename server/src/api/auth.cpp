@@ -24,7 +24,7 @@ static constexpr std::size_t max_email_size = 100u;
 static constexpr std::size_t min_password_size = 10u;
 static constexpr std::size_t max_password_size = 100u;
 
-// Ensure that both username not found and invalid password responses are equal
+// 确保「用户名不存在」与「密码错误」两种情况返回完全相同的响应
 static response_builder::response_type login_failed(response_builder& resp)
 {
     return resp.bad_request_json(api_error_id::login_failed, "Login failed");
@@ -35,13 +35,13 @@ asio::awaitable<response_builder::response_type> chat::handle_create_account(
     shared_state& st
 )
 {
-    // Parse params
+    // 解析参数
     auto parse_result = ctx.parse_json_body<create_account_request>();
     if (parse_result.has_error())
         co_return ctx.response().bad_request_json("Invalid body provided");
     const auto& req_params = parse_result.value();
 
-    // Validate params
+    // 校验参数
     if (req_params.username.size() < min_username_size || req_params.username.size() > max_username_size)
         co_return ctx.response().bad_request_json("username: invalid size");
     if (req_params.email.size() > max_email_size)
@@ -51,16 +51,16 @@ asio::awaitable<response_builder::response_type> chat::handle_create_account(
     if (req_params.password.size() < min_password_size || req_params.password.size() > max_password_size)
         co_return ctx.response().bad_request_json("password: invalid size");
 
-    // Hash the password before insertion. TODO: this is an ultra-expensive
-    // computation that should be run in a thread pool.
+    // 入库前先对密码做哈希。TODO：这是一个极其耗时的计算，
+    // 应当放到线程池中执行。
     // https://github.com/anarthal/servertech-chat/issues/47
     auto hashed_passwd = hash_password(req_params.password);
 
-    // Execute the operation
+    // 执行操作
     auto user_id_result = co_await st.mysql()
                               .create_user(req_params.username, req_params.email, hashed_passwd);
 
-    // Handle errors
+    // 处理错误
     if (user_id_result.has_error())
     {
         auto err = user_id_result.error();
@@ -72,7 +72,7 @@ asio::awaitable<response_builder::response_type> chat::handle_create_account(
             co_return ctx.response().internal_server_error(err);
     }
 
-    // Generate a session cookie
+    // 生成会话 cookie
     auto session_cookie_result = co_await st.cookie_auth().generate_session_cookie(*user_id_result);
     if (session_cookie_result.has_error())
         co_return ctx.response().internal_server_error(session_cookie_result.error());
@@ -81,13 +81,13 @@ asio::awaitable<response_builder::response_type> chat::handle_create_account(
 
 asio::awaitable<response_builder::response_type> chat::handle_login(request_context& ctx, shared_state& st)
 {
-    // Parse params
+    // 解析参数
     auto parse_result = ctx.parse_json_body<login_request>();
     if (parse_result.has_error())
         co_return ctx.response().bad_request_json("Invalid body provided");
     const auto& req_params = parse_result.value();
 
-    // Validate params
+    // 校验参数
     if (req_params.email.size() > max_email_size)
         co_return ctx.response().bad_request_json("email: too long");
     if (!is_email(req_params.email))
@@ -95,29 +95,29 @@ asio::awaitable<response_builder::response_type> chat::handle_login(request_cont
     if (req_params.password.size() < min_password_size || req_params.password.size() > max_password_size)
         co_return ctx.response().bad_request_json("password: invalid size");
 
-    // Retrieve user by email
+    // 按邮箱查询用户
     auto user_result = co_await st.mysql().get_user_by_email(req_params.email);
 
-    // Handle errors
+    // 处理错误
     if (user_result.has_error())
     {
         auto err = user_result.error();
         if (err == errc::not_found)
-            co_return login_failed(ctx.response());  // email not found
+            co_return login_failed(ctx.response());  // 邮箱不存在
         else
             co_return ctx.response().internal_server_error(err);
     }
     const auto& user = user_result.value();
 
-    // Verify password. TODO: this function requires a lot of computing,
-    // it should be run in a thread pool
+    // 校验密码。TODO：这个函数计算量很大，
+    // 应当放到线程池中执行
     // https://github.com/anarthal/servertech-chat/issues/47
     if (!verify_password(req_params.password, user.hashed_password))
     {
         co_return login_failed(ctx.response());
     }
 
-    // Generate a session cookie
+    // 生成会话 cookie
     auto session_cookie_result = co_await st.cookie_auth().generate_session_cookie(user.id);
     if (session_cookie_result.has_error())
         co_return ctx.response().internal_server_error(session_cookie_result.error());

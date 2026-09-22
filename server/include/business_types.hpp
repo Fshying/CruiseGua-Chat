@@ -1,10 +1,3 @@
-//
-// Copyright (c) 2023-2025 Ruben Perez Hidalgo (rubenperez038 at gmail dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-
 #ifndef SERVERTECHCHAT_SERVER_INCLUDE_BUSINESS_TYPES_HPP
 #define SERVERTECHCHAT_SERVER_INCLUDE_BUSINESS_TYPES_HPP
 
@@ -13,72 +6,70 @@
 
 #include "timestamp.hpp"
 
-// This file contains business object definitions
-
+// 本文件包含业务对象的定义
 namespace chat {
 
-// An application user
+// 应用程序的用户
 struct user
 {
-    // User ID
+    // 用户 ID
     std::int64_t id;
 
-    // Username
+    // 用户名
     std::string username;
 };
 
-// A user that includes details about authentication.
-// Having this separate from the user definition avoids loading auth details
-// unless strictly required.
+// 包含认证信息的用户。
+// 将其与 user 定义分开，可以避免在非必要的情况下加载认证信息。
 struct auth_user
 {
-    // User ID
+    // 用户 ID
     std::int64_t id;
 
-    // PHC-format password hash
+    // PHC 格式的密码哈希
     std::string hashed_password;
 };
 
-// A chat message
+// 一条聊天消息
 struct message
 {
-    // Message ID
+    // 消息 ID
     std::string id;
 
-    // The actual content of the message
+    // 消息的实际内容
     std::string content;
 
-    // UTC timestamp when the server received the message
+    // 服务器收到该消息时的 UTC 时间戳
     timestamp_t timestamp;
 
-    // ID of the user that sent the message
+    // 发送该消息的用户 ID
     std::int64_t user_id{};
 };
 
-// A room history message batch
+// 一批房间历史消息
 struct message_batch
 {
-    // The messages in the batch
+    // 该批次中的消息
     std::vector<message> messages;
 
-    // true if there are more messages that could be loaded
+    // 如果还有更多消息可以加载，则为 true
     bool has_more{};
 };
 
-// A chat room
+// 一个聊天室
 struct room
 {
-    // Room ID
+    // 房间 ID
     std::string id;
 
-    // User-facing room name
+    // 面向用户的房间名称
     std::string name;
 
-    // Initial room message history
+    // 房间的初始消息历史
     message_batch history;
 };
 
-// A map from user IDs to usernames
+// 从用户 ID 到用户名的映射
 using username_map = std::unordered_map<std::int64_t, std::string>;
 
 }  // namespace chat

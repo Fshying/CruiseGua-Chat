@@ -15,15 +15,15 @@
 
 namespace chat {
 
-// The SameSite cookie attribute
+// cookie 的 SameSite 属性
 enum class same_site_t
 {
     strict,
-    lax,  // this is the default
+    lax,  // 这是默认值
     none,
 };
 
-// A builder for the Set-Cookie header
+// Set-Cookie 头的构建器
 class set_cookie_builder
 {
     std::string_view name_;
@@ -34,44 +34,44 @@ class set_cookie_builder
     bool secure_{false};
 
 public:
-    // Constructs a builder for a (cookie-name, cookie-value) pair.
-    // name should be a valid HTTP token; value should be a valid cookie
-    // value (see cookie.cpp for details). Otherwise, an exception is thrown.
+    // 为 (cookie 名, cookie 值) 键值对构造一个构建器。
+    // name 应当是合法的 HTTP token；value 应当是合法的 cookie 值
+    // （详见 cookie.cpp）。否则会抛出异常。
     set_cookie_builder(std::string_view name, std::string_view value);
 
-    // Sets the HttpOnly attribute
+    // 设置 HttpOnly 属性
     set_cookie_builder& http_only(bool value) noexcept
     {
         http_only_ = value;
         return *this;
     }
 
-    // Sets the Max-Age attribute
+    // 设置 Max-Age 属性
     set_cookie_builder& max_age(std::chrono::seconds val) noexcept
     {
         max_age_ = val;
         return *this;
     }
 
-    // Sets the SameSite attribute
+    // 设置 SameSite 属性
     set_cookie_builder& same_site(same_site_t val) noexcept
     {
         same_site_ = val;
         return *this;
     }
 
-    // Sets the Secure attribute
+    // 设置 Secure 属性
     set_cookie_builder& secure(bool val) noexcept
     {
         secure_ = val;
         return *this;
     }
 
-    // Builds the Set-Cookie header
+    // 构建 Set-Cookie 头
     std::string build_header() const;
 };
 
-// A non-owning (cookie-name, cookie-value) pair
+// 一个非拥有型的 (cookie 名, cookie 值) 键值对
 struct cookie_pair
 {
     std::string_view name;
@@ -83,22 +83,21 @@ inline bool operator==(const cookie_pair& lhs, const cookie_pair& rhs) noexcept
 }
 inline bool operator!=(const cookie_pair& lhs, const cookie_pair& rhs) noexcept { return !(lhs == rhs); }
 
-// A zero-copy parser for the Cookie header (Beast-style).
-// Used to parse incoming cookies.
+// Cookie 头的零拷贝解析器（Beast 风格）。
+// 用于解析传入的 cookie。
 //
-// If a parsing error is encountered while iterating the string,
-// the behavior of the container will be as if a string containing
-// only characters up to but excluding the first invalid character
-// was used to construct the list.
+// 如果在遍历字符串的过程中遇到解析错误，
+// 该容器的行为等同于：用「只包含第一个非法字符之前
+// （不含该字符）的那些字符」的字符串来构造列表。
 class cookie_list
 {
     std::string_view header_;
 
 public:
-    // Cookie name, cookie value
+    // cookie 名、cookie 值
     using value_type = cookie_pair;
 
-    // Iterator
+    // 迭代器
     class const_iterator
     {
     public:
@@ -143,7 +142,7 @@ public:
 
         const_iterator(const char* first, const char* last) noexcept : next_(first), last_(last)
         {
-            // Parse the first cookie. This is called from begin()
+            // 解析第一个 cookie。该函数由 begin() 调用
             increment(true);
         }
 
@@ -151,21 +150,21 @@ public:
         void reset() noexcept { *this = const_iterator(); }
     };
 
-    // Constructs an empty cookie list
+    // 构造一个空的 cookie 列表
     cookie_list() = default;
 
-    // Constructs a cookie list from a header string. No copies of the header
-    // are performed.
+    // 从头部字符串构造一个 cookie 列表。
+    // 不会对头部内容做任何拷贝。
     explicit cookie_list(std::string_view header) noexcept;
 
-    // Parses the first cookie and returns an iteator to it
+    // 解析第一个 cookie，并返回指向它的迭代器
     const_iterator begin() const noexcept
     {
         return header_.empty() ? const_iterator()
                                : const_iterator(header_.data(), header_.data() + header_.size());
     }
 
-    // One-past-the-end sentinel iterator
+    // 末尾之后（one-past-the-end）的哨兵迭代器
     const_iterator end() const noexcept { return const_iterator(); }
 };
 

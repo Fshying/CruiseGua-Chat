@@ -17,10 +17,10 @@
 
 namespace chat {
 
-// Forward declaration
+// 前向声明
 class shared_state;
 
-// Runs the chat websocket session until an error occurs.
+// 运行聊天 websocket 会话，直到发生错误。
 boost::asio::awaitable<boost::system::error_code> handle_chat_websocket(
     websocket socket,
     std::shared_ptr<shared_state> state

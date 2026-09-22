@@ -23,19 +23,19 @@ using namespace chat;
 namespace asio = boost::asio;
 using boost::system::result;
 
-static constexpr std::size_t session_id_size = 16;  // bytes
+static constexpr std::size_t session_id_size = 16;  // 字节
 
 static std::string generate_identifier()
 {
-    // Generate a random session ID. This uses the public random generator
-    // because this value is exposed to the user
+    // 生成随机会话 ID。这里使用公开的随机数生成器，
+    // 因为这个值会暴露给用户
     std::array<unsigned char, session_id_size> sid{};
     int ec = RAND_bytes(sid.data(), sid.size());
     if (ec <= 0)
         throw std::runtime_error("Generating session ID: RAND_bytes");
 
-    // base64 encode the session ID so it can be transmitted
-    // using a cookie or stored in Redis
+    // 对会话 ID 做 base64 编码，这样它就能通过
+    // cookie 传输，或者存入 Redis
     return base64_encode(sid);
 }
 
@@ -57,20 +57,20 @@ asio::awaitable<result<std::string>> session_store::generate_session_id(
     std::chrono::seconds session_duration
 )
 {
-    // Convert the user ID to string
+    // 把用户 ID 转成字符串
     auto user_id_str = std::to_string(user_id);
 
     while (true)
     {
-        // Generate an identifier
+        // 生成一个标识符
         auto id = generate_identifier();
         auto redis_key = get_redis_key(id);
 
-        // Try to insert it
+        // 尝试插入
         auto err = co_await redis_->set_nonexisting_key(redis_key, user_id_str, session_duration);
 
-        // If we were successful, done. If we got a conflict (unlikely), generate a new ID.
-        // Exit on unknown errors
+        // 成功就结束。如果发生冲突（可能性很小），就重新生成一个新 ID。
+        // 遇到未知错误则直接退出
         if (!err)
             co_return id;
         else if (err != errc::already_exists)

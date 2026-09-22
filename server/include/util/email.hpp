@@ -10,7 +10,7 @@
 
 namespace chat {
 
-// Returns true if the given string is a valid email (by pattern matching)
+// 如果给定字符串是合法的邮箱（通过模式匹配判断），返回 true
 bool is_email(std::string_view str);
 
 }  // namespace chat

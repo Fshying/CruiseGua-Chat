@@ -19,21 +19,21 @@ BOOST_AUTO_TEST_CASE(success)
 {
     constexpr std::string_view password = "some_password";
 
-    // Hash the password
+    // 对密码做哈希
     auto hash = hash_password(password);
 
-    // It was hashed using scrypt and encoded using PHC
+    // 它是用 scrypt 做哈希、用 PHC 格式编码的
     std::string_view prefix = "$scrypt$";
     BOOST_TEST(hash.substr(0, prefix.size()) == prefix);
 
-    // Hashing the password again yields a different value because of the salt
+    // 再次对同一密码做哈希会得到不同的值，因为盐不同
     auto hash2 = hash_password(password);
     BOOST_TEST(hash != hash2);
 
-    // Checking the right password succeeds
+    // 用正确的密码校验会成功
     BOOST_TEST(verify_password(password, hash));
 
-    // Checking an incorrect password fails
+    // 用错误的密码校验会失败
     BOOST_TEST(!verify_password("bad_password", hash));
 }
 

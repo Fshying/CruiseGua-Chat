@@ -37,7 +37,7 @@
 #include <string_view>
 
 #include "business_types.hpp"
-#include "business_types_metadata.hpp"  // Required by static_results
+#include "business_types_metadata.hpp"  // static_results 需要它
 
 using namespace chat;
 namespace mysql = boost::mysql;
@@ -47,33 +47,33 @@ using boost::system::result;
 
 namespace {
 
-// Returns the value of an environment variable, or default_value if it's not defined
+// 返回某个环境变量的值；如果该变量未定义，则返回 default_value
 std::string getenv_or(const char* name, const char* default_value)
 {
     const char* res = std::getenv(name);
     return res == nullptr ? default_value : res;
 }
 
-// Returns the pool params to use
+// 返回要使用的连接池参数
 mysql::pool_params get_pool_params()
 {
     return {
-        // The server address. We get the hostname from an environment
-        // variable, and use the default port.
+        // 服务器地址。主机名来自环境变量，
+        // 端口使用默认值。
         .server_address = mysql::host_and_port{getenv_or("MYSQL_HOST", "localhost")},
 
-        // The username to log in as
-        .username = "servertech_user",
+        // 登录使用的用户名
+        .username = "root",
 
-        // The password. This one
-        .password = getenv_or("MYSQL_PASSWORD", "temp_password"),
+        // 密码
+        .password = getenv_or("MYSQL_PASSWORD", "123456"),
 
-        // The database to use
+        // 要使用的数据库
         .database = "servertech_chat",
     };
 }
 
-// Log an error to std::cerr
+// 把错误记录到 std::cerr
 void log_mysql_error(error_code ec, std::string_view what, const mysql::diagnostics& diagnostics)
 {
     log_error(
@@ -114,7 +114,7 @@ public:
         mysql::diagnostics diag;
         mysql::results result;
 
-        // Get a connection
+        // 获取一个连接
         mysql::pooled_connection conn = co_await pool_.async_get_connection(diag, asio::redirect_error(ec));
         if (ec)
         {
@@ -122,7 +122,7 @@ public:
             co_return ec;
         }
 
-        // Execute the insertion
+        // 执行插入
         co_await conn->async_execute(
             mysql::with_params(
                 "INSERT INTO users (username, email, password) VALUES ({}, {}, {})",
@@ -135,28 +135,28 @@ public:
             asio::redirect_error(ec)
         );
 
-        // Detect duplicates
+        // 检测重复
         if (ec == mysql::common_server_errc::er_dup_entry)
         {
-            // As per MySQL documentation, error messages for er_dup_entry
-            // are formatted as: Duplicate entry '%s' for key %d
+            // 根据 MySQL 文档，er_dup_entry 的错误消息
+            // 格式为：Duplicate entry '%s' for key %d
             if (diag.server_message().ends_with("'users.username'"))
                 co_return errc::username_exists;
             else if (diag.server_message().ends_with("'users.email'"))
                 co_return errc::email_exists;
         }
 
-        // Unknown errors
+        // 未知错误
         if (ec)
         {
             log_mysql_error(ec, "MySQL error while creating user", diag);
             co_return ec;
         }
 
-        // Done. MySQL reports last_insert_id as an uint64_t to be able to handle
-        // any column type, but our id field is defined as BIGINT (int64).
-        // The connection is returned to the pool automatically. The statement
-        // is deallocated automatically by the connection pool.
+        // 完成。为了能兼容任意列类型，MySQL 把 last_insert_id 报告为 uint64_t，
+        // 但我们的 id 字段定义是 BIGINT（int64）。
+        // 连接会自动归还到连接池。语句（statement）
+        // 也会由连接池自动释放。
         co_return static_cast<std::int64_t>(result.last_insert_id());
     }
 
@@ -165,7 +165,7 @@ public:
         mysql::diagnostics diag;
         error_code ec;
 
-        // Get a connection
+        // 获取一个连接
         auto conn = co_await pool_.async_get_connection(diag, asio::redirect_error(ec));
         if (ec)
         {
@@ -173,8 +173,8 @@ public:
             co_return ec;
         }
 
-        // static_results requires that SQL field names
-        // match with C++ struct field names, so we use SQL aliases
+        // static_results 要求 SQL 字段名
+        // 与 C++ 结构体字段名一致，因此这里使用 SQL 别名
         mysql::static_results<auth_user> result;
         co_await conn->async_execute(
             mysql::with_params("SELECT id, password AS hashed_password FROM users WHERE email = {}", email),
@@ -188,9 +188,9 @@ public:
             co_return ec;
         }
 
-        // Result.
-        // The connection is returned to the pool automatically. The statement
-        // is deallocated automatically by the connection pool.
+        // 返回结果。
+        // 连接会自动归还到连接池。语句（statement）
+        // 也会由连接池自动释放。
         if (result.rows().empty())
             co_return errc::not_found;
         co_return std::move(result.rows()[0]);
@@ -201,7 +201,7 @@ public:
         mysql::diagnostics diag;
         error_code ec;
 
-        // Get a connection
+        // 获取一个连接
         auto conn = co_await pool_.async_get_connection(diag, asio::redirect_error(ec));
         if (ec)
         {
@@ -209,7 +209,7 @@ public:
             co_return ec;
         }
 
-        // Run the query
+        // 执行查询
         mysql::static_results<user> result;
         co_await conn->async_execute(
             mysql::with_params("SELECT id, username  FROM users WHERE id = {}", user_id),
@@ -223,9 +223,9 @@ public:
             co_return ec;
         }
 
-        // Result.
-        // The connection is returned to the pool automatically. The statement
-        // is deallocated automatically by the connection pool.
+        // 返回结果。
+        // 连接会自动归还到连接池。语句（statement）
+        // 也会由连接池自动释放。
         if (result.rows().empty())
             co_return errc::not_found;
         co_return std::move(result.rows()[0]);
@@ -233,15 +233,15 @@ public:
 
     asio::awaitable<result<username_map>> get_usernames(std::span<const std::int64_t> user_ids) final override
     {
-        // Check that we have one user ID, at least.
-        // Otherwise, the generated query may not be valid.
+        // 确认至少有一个用户 ID。
+        // 否则生成的查询语句可能是非法的。
         if (user_ids.empty())
             co_return username_map();
 
         mysql::diagnostics diag;
         error_code ec;
 
-        // Get a connection
+        // 获取一个连接
         auto conn = co_await pool_.async_get_connection(diag, asio::redirect_error(ec));
         if (ec)
         {
@@ -249,9 +249,9 @@ public:
             co_return ec;
         }
 
-        // Execute the query.
-        // We can safely do this because we checked that user_ids is not empty.
-        // Otherwise, the client-side generated query wouldn't be valid.
+        // 执行查询。
+        // 之所以可以放心这么做，是因为前面已经确认 user_ids 非空。
+        // 否则客户端生成的查询语句会是非法的。
         using row_t = std::tuple<std::int64_t, std::string>;
         mysql::static_results<row_t> result;
         co_await conn->async_execute(
@@ -266,16 +266,16 @@ public:
             co_return ec;
         }
 
-        // We didn't do anything modifying the connection state, so we can
-        // explicitly return it, indicating that no reset is required.
+        // 我们没有做任何会改变连接状态的操作，因此可以
+        // 显式归还连接，表示无需重置。
         conn.return_without_reset();
 
-        // Result
+        // 返回结果
         std::unordered_map<std::int64_t, std::string> res;
         for (auto& elm : result.rows())
             res.insert({std::get<0>(elm), std::move(std::get<1>(elm))});
 
-        // Done
+        // 完成
         co_return res;
     }
 };

@@ -10,22 +10,21 @@
 
 #include <chrono>
 
-// Helpers to work with timestamps.
-// The serialized representation of a timestamp is an int64_t with milliseconds
-// since the UNIX epoch
+// 处理时间戳的辅助工具。
+// 时间戳的序列化表示是一个 int64_t，内容为自 UNIX 纪元起的毫秒数
 
 namespace chat {
 
-// Timestamps are eventually shown to the user, so we need them to match the system clock
+// 时间戳最终会展示给用户，因此需要与系统时钟一致
 using timestamp_t = std::chrono::system_clock::time_point;
 
-// Converts a timestamp to its serialized representation
+// 把时间戳转换为其序列化表示
 inline std::int64_t serialize_timestamp(timestamp_t input) noexcept
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(input.time_since_epoch()).count();
 }
 
-// Creates a timestamp from its serialized representation
+// 从序列化表示创建时间戳
 inline timestamp_t parse_timestamp(std::int64_t input) noexcept
 {
     return timestamp_t(std::chrono::milliseconds(input));

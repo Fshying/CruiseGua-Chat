@@ -23,7 +23,7 @@ using namespace chat;
 
 static void main_impl(int argc, char* argv[])
 {
-    // Check command line arguments.
+    //检查命令行参数：ip地址、端口号和文档根目录
     if (argc != 4)
     {
         std::cerr << "Usage: " << argv[0] << " <address> <port> <doc_root>\n"
@@ -32,64 +32,64 @@ static void main_impl(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Application config
-    const char* doc_root = argv[3];                               // Path to static files
-    const char* ip = argv[1];                                     // IP where the server will listen
-    auto port = static_cast<unsigned short>(std::atoi(argv[2]));  // Port
+    //
+    const char* doc_root = argv[3];                               // 静态文件所在路径
+    const char* ip = argv[1];                                     // 服务器监听的 IP 地址
+    auto port = static_cast<unsigned short>(std::atoi(argv[2]));  // 端口
 
-    // An event loop, where the application will run. The server is single-
-    // threaded, so we set the concurrency hint to 1
+    // 应用程序运行的事件循环。服务器是单线程的，
+    // 因此把并发提示设置为 1
     asio::io_context ctx(1);
 
-    // Singleton objects shared by all connections
+    // 所有连接共享的单例对象
     auto st = std::make_shared<shared_state>(doc_root, ctx.get_executor());
 
-    // The physical endpoint where our server will listen
+    // 服务器监听的物理端点
     asio::ip::tcp::endpoint listening_endpoint(asio::ip::make_address(ip), port);
 
-    // A signal_set allows us to intercept SIGINT and SIGTERM and
-    // exit gracefully
+    // signal_set 用于捕获 SIGINT 和 SIGTERM，
+    // 从而优雅地退出
     asio::signal_set signals(ctx.get_executor(), SIGINT, SIGTERM);
 
-    // Launch the Redis connection
+    // 启动 Redis 连接
     st->redis().start_run();
 
-    // Launch the MySQL connection pool
+    // 启动 MySQL 连接池
     st->mysql().start_run();
 
-    // Start listening for HTTP connections. This will run until the context is stopped
+    // 开始监听 HTTP 连接。它会一直运行，直到 context 被停止
     asio::co_spawn(
-        // The execution context to run the coroutine on
+        // 运行协程所在的执行上下文
         ctx,
 
-        // The actual coroutine to run, as an awaitable
+        // 实际要运行的协程，以 awaitable 的形式传入
         run_server(listening_endpoint, st),
 
-        // Will run when the coroutine finishes. Propagate any exceptions thrown
-        // in the coroutine to main
+        // 协程结束后执行。把协程中抛出的任何异常
+        // 传播到 main
         [](std::exception_ptr exc) {
             if (exc)
                 std::rethrow_exception(exc);
         }
     );
 
-    // Capture SIGINT and SIGTERM to perform a clean shutdown
+    // 捕获 SIGINT 和 SIGTERM，以便干净地关闭服务器
     signals.async_wait([st, &ctx](boost::system::error_code, int) {
-        // Stop the Redis reconnection loop
+        // 停止 Redis 重连循环
         st->redis().cancel();
 
-        // Stop the MySQL reconnection loop
+        // 停止 MySQL 重连循环
         st->mysql().cancel();
 
-        // Stop the io_context. This will cause run() to return
+        // 停止 io_context。这会让 run() 返回
         ctx.stop();
     });
 
-    // Run the io_context. This will block until the context is stopped by
-    // a signal and all outstanding async tasks are finished.
+    // 运行 io_context。它会阻塞在这里，直到 context 被信号停止，
+    // 并且所有尚未完成的异步任务都执行完毕。
     ctx.run();
 
-    // (If we get here, it means we got a SIGINT or SIGTERM)
+    // （如果能执行到这里，说明我们收到了 SIGINT 或 SIGTERM）
 }
 
 int main(int argc, char* argv[])

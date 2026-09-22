@@ -16,12 +16,12 @@
 
 namespace chat {
 
-// Encodes the given input as a base64 string. If !with_padding, no padding
-// will be added to the string.
+// 把给定输入编码为 base64 字符串。如果 !with_padding，
+// 则不会在字符串中添加填充。
 std::string base64_encode(std::span<const unsigned char> input, bool with_padding = true);
 
-// Decodes the given input, interpreting it as a base64 string. If !with_padding,
-// no padding is expected at the end of the string.
+// 解码给定输入，把它按 base64 字符串来解释。如果 !with_padding，
+// 则字符串末尾不要求有填充。
 boost::system::result<std::vector<unsigned char>> base64_decode(
     std::string_view input,
     bool with_padding = true

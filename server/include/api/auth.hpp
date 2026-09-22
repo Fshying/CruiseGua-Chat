@@ -12,7 +12,7 @@
 
 #include "request_context.hpp"
 
-// API handler functions for authentication endpoints
+// 认证相关端点的 API 处理函数
 
 namespace chat {
 

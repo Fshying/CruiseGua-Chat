@@ -26,7 +26,7 @@ namespace http = boost::beast::http;
 namespace beast = boost::beast;
 using boost::system::error_code;
 
-// Intentionally don't provide exact version
+// 故意不给出确切版本号
 static constexpr std::string_view server_header = "beast";
 
 static std::string_view mime_type(std::string_view path)
@@ -91,33 +91,33 @@ response_builder::response_builder(unsigned version, bool keep_alive) : keep_ali
 
 response_builder::response_type response_builder::file_response(const char* path, bool is_head)
 {
-    // Attempt to open the file
+    // 尝试打开该文件
     error_code ec;
     http::file_body::value_type body;
     body.open(path, beast::file_mode::scan, ec);
 
-    // Handle the case where the file doesn't exist
+    // 处理文件不存在的情况
     if (ec == boost::system::errc::no_such_file_or_directory)
         return not_found_text();
 
-    // Handle an unknown error
+    // 处理未知错误
     if (ec)
         return internal_server_error(ec, "Opening file");
 
-    // Cache the size since we need it after the move
+    // 先把大小缓存下来，因为 move 之后还需要它
     const auto size = body.size();
     set_content_type(mime_type(path));
 
     if (is_head)
     {
-        // Respond to HEAD request
+        // 响应 HEAD 请求
         auto res = build_response<http::empty_body>();
         res.content_length(size);
         return res;
     }
     else
     {
-        // Respond to GET request
+        // 响应 GET 请求
         auto res = build_response<http::file_body>(std::move(body));
         res.content_length(size);
         return res;
@@ -164,10 +164,10 @@ response_builder::response_type response_builder::json_error(
 
 response_builder::response_type response_builder::internal_server_error(error_code ec, std::string_view what)
 {
-    // Log the error
+    // 记录该错误
     log_error(ec, "Returning internal server error", what);
 
-    // Intentionally don't expose any error information
+    // 故意不暴露任何错误信息
     return plaintext_response(
         boost::beast::http::status::internal_server_error,
         "An unexpected server error occurred"
@@ -185,7 +185,7 @@ error_code request_context::parse_request_target()
 
 bool request_context::is_json_content_type() const
 {
-    // Validate content-type
+    // 校验 content-type
     auto it = request_.find(boost::beast::http::field::content_type);
     return it != request_.end() && it->value() == "application/json";
 }

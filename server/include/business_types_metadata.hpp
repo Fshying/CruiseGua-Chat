@@ -12,8 +12,8 @@
 
 #include "business_types.hpp"
 
-// Contains Boost.Describe metadata for business types.
-// Metadata is not included in the main header to reduce build times.
+// 包含业务类型的 Boost.Describe 元数据。
+// 这些元数据没有放进主头文件，以缩短编译时间。
 
 namespace chat {
 

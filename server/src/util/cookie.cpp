@@ -15,8 +15,8 @@
 
 using namespace chat;
 
-// Copied from Boost.Beast. Returns whether a character is valid in the context
-// of a HTTP token (RFC2616/RFC7230). Cookie names must be valid HTTP tokens.
+// 复制自 Boost.Beast。返回某个字符在 HTTP token（RFC2616/RFC7230）
+// 的语境下是否合法。cookie 名必须是合法的 HTTP token。
 static bool is_token_char(char c) noexcept
 {
     /*
@@ -47,14 +47,14 @@ static bool is_token_char(char c) noexcept
     return tab[static_cast<unsigned char>(c)];
 }
 
-// Returns whether a character is valid in the context of a cookie value.
-// See https://datatracker.ietf.org/doc/html/rfc6265#section-4.1.1
+// 返回某个字符在 cookie 值的语境下是否合法。
+// 参见 https://datatracker.ietf.org/doc/html/rfc6265#section-4.1.1
 static bool is_cookie_value_char(char c) noexcept
 {
     //  cookie-octet      = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
-    //                    ; US-ASCII characters excluding CTLs,
-    //                    ; whitespace DQUOTE, comma, semicolon,
-    //                    ; and backslash
+    //                    ; US-ASCII 字符，但不包括控制字符、
+    //                    ; 空白、双引号、逗号、分号
+    //                    ; 以及反斜杠
     static char constexpr tab[] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 16
@@ -77,7 +77,7 @@ static bool is_cookie_value_char(char c) noexcept
     return tab[static_cast<unsigned char>(c)];
 }
 
-// Skips optional whitespace
+// 跳过可选的空白
 static const char* skip_ows(const char* it, const char* end) noexcept
 {
     while (it != end && (*it == ' ' || *it == '\t'))
@@ -85,7 +85,7 @@ static const char* skip_ows(const char* it, const char* end) noexcept
     return it;
 }
 
-// Skips a token
+// 跳过一个 token
 static const char* skip_token(const char* it, const char* last) noexcept
 {
     while (it != last && is_token_char(*it))
@@ -93,7 +93,7 @@ static const char* skip_token(const char* it, const char* last) noexcept
     return it;
 }
 
-// Skips a cookie value
+// 跳过一个 cookie 值
 static const char* skip_cookie_value(const char* it, const char* last) noexcept
 {
     while (it != last && is_cookie_value_char(*it))
@@ -157,7 +157,7 @@ std::string set_cookie_builder::build_header() const
     return oss.str();
 }
 
-// Grammar for the Cookie header
+// Cookie 头的语法
 // https://datatracker.ietf.org/doc/html/rfc6265
 //
 //      cookie-header     = "Cookie:" OWS cookie-string OWS
@@ -166,24 +166,24 @@ std::string set_cookie_builder::build_header() const
 //      cookie-name       = token
 //      cookie-value      = *cookie-octet / ( DQUOTE *cookie-octet DQUOTE )
 //      cookie-octet      = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
-//                        ; US-ASCII characters excluding CTLs,
-//                        ; whitespace DQUOTE, comma, semicolon,
-//                        ; and backslash
+//                        ; US-ASCII 字符，但不包括控制字符、
+//                        ; 空白、双引号、逗号、分号
+//                        ; 以及反斜杠
 
-// Trim the initial OWS. The final OWS can be left there, since when no more cookies
-// are found, increment() sets the iterator to end()
+// 去掉开头的 OWS。末尾的 OWS 可以留着不管，因为当再也找不到
+// cookie 时，increment() 会把迭代器置为 end()
 cookie_list::cookie_list(std::string_view header) noexcept : header_(trim_ows(header)) {}
 
 void cookie_list::const_iterator::increment(bool is_first) noexcept
 {
-    // Check that this is not a sentinel iterator
+    // 检查这不是哨兵迭代器
     assert(next_ != nullptr);
     assert(last_ != nullptr);
 
     const char* current = next_;
     const char* const last = last_;
 
-    // If we're parsing subsequent cookies, skip a semicolon and a space
+    // 如果解析的是后续的 cookie，就跳过一个分号和一个空格
     if (!is_first)
     {
         if (current == last || *current++ != ';')
@@ -192,18 +192,18 @@ void cookie_list::const_iterator::increment(bool is_first) noexcept
             return reset();
     }
 
-    // Cookie name. Empty cookie names are not valid
+    // cookie 名。空的 cookie 名是非法的
     auto name_first = current;
     current = skip_token(current, last);
     std::string_view name(name_first, current - name_first);
     if (name.empty())
         return reset();
 
-    // Equal sign
+    // 等号
     if (current == last || *current++ != '=')
         return reset();
 
-    // Cookie value. Note that quotes are part of the value
+    // cookie 值。注意引号也是值的一部分
     auto value_first = current;
     bool is_quoted = false;
     if (current != last && *current == '"')
@@ -220,7 +220,7 @@ void cookie_list::const_iterator::increment(bool is_first) noexcept
     }
     std::string_view value(value_first, current - value_first);
 
-    // Done parsing
+    // 解析完成
     val_.name = name;
     val_.value = value;
     next_ = current;

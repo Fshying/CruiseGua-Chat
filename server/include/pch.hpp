@@ -8,7 +8,7 @@
 #ifndef SERVERTECHCHAT_SERVER_INCLUDE_PCH_HPP
 #define SERVERTECHCHAT_SERVER_INCLUDE_PCH_HPP
 
-// Precompiled header, to speed-up compilation.
+// 预编译头文件，用于加快编译速度。
 
 #include <boost/asio/any_io_executor.hpp>
 #include <boost/asio/awaitable.hpp>

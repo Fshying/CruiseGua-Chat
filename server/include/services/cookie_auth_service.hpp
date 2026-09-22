@@ -16,15 +16,14 @@
 
 #include "business_types.hpp"
 
-// Contains high-level functions to set and verify user sessions.
-// Session IDs are stored in Redis (see session_store.hpp for details).
-// The session ID alone is enough to authenticate a client (so it constitutes
-// an authentication token).
-// Session IDs are transmitted to the client and back using HTTP cookies.
+// 包含用于设置和校验用户会话的高层函数。
+// 会话 ID 存储在 Redis 中（详见 session_store.hpp）。
+// 仅凭会话 ID 就足以认证一个客户端（因此它相当于一个认证令牌）。
+// 会话 ID 通过 HTTP cookie 发送给客户端，并由客户端带回。
 
 namespace chat {
 
-// Forward declarations
+// 前向声明
 class redis_client;
 class mysql_client;
 
@@ -36,20 +35,19 @@ class cookie_auth_service
 public:
     cookie_auth_service(redis_client& redis, mysql_client& mysql) noexcept : redis_(&redis), mysql_(&mysql) {}
 
-    // Allocates a new session ID for the passed user ID (by storing it in Redis),
-    // and returns an appropriate Set-Cookie header.
+    // 为传入的用户 ID 分配一个新的会话 ID（通过存入 Redis 实现），
+    // 并返回一个合适的 Set-Cookie 头。
     boost::asio::awaitable<boost::system::result<std::string>> generate_session_cookie(std::int64_t user_id);
 
-    // Verifies that the user is authenticated via a cookie, returning the user_id of the
-    // authenticated user.
-    // Returns errc::auth_required if the cookie is not present, invalid,
-    // or doesn't match any valid session ID.
+    // 校验用户是否已通过 cookie 认证，并返回该已认证用户的 user_id。
+    // 如果 cookie 不存在、无效，或者不匹配任何有效的会话 ID，
+    // 则返回 errc::auth_required。
     boost::asio::awaitable<boost::system::result<std::int64_t>> user_id_from_cookie(
         const boost::beast::http::fields& req_headers
     );
 
-    // Verifies that the user is authenticated via a cookie, returning the associated user.
-    // Works like user_id_from_cookie, but also looks up the user in MySQL.
+    // 校验用户是否已通过 cookie 认证，并返回对应的用户。
+    // 行为类似 user_id_from_cookie，但还会到 MySQL 中查询该用户。
     boost::asio::awaitable<boost::system::result<user>> user_from_cookie(
         const boost::beast::http::fields& req_headers
     );

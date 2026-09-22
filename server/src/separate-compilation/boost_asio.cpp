@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-// This file enabled separate compilation for Boost.Asio, reducing
-// build times for the other files.
+// 本文件为 Boost.Asio 启用了分离编译（separate compilation），
+// 从而缩短其他文件的编译时间。
 
 #include <boost/asio/impl/src.hpp>
 #include <boost/asio/ssl/impl/src.hpp>

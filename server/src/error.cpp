@@ -16,7 +16,7 @@
 
 namespace chat {
 
-// Adds Boost.Describe metadata to errc. Required for describe::enum_to_string
+// 为 errc 添加 Boost.Describe 元数据。describe::enum_to_string 需要这些元数据
 BOOST_DESCRIBE_ENUM(
     errc,
     redis_parse_error,
@@ -42,7 +42,7 @@ static const char* to_string(chat::errc v) noexcept
     return boost::describe::enum_to_string(v, "<unknown chat error>");
 }
 
-// Custom category for chat::errc. Exposed by get_chat_category
+// chat::errc 自定义的错误类别。通过 get_chat_category 暴露出去
 class chat_category final : public boost::system::error_category
 {
 public:
@@ -58,7 +58,7 @@ const boost::system::error_category& chat::get_chat_category() noexcept { return
 
 void chat::log_error(boost::system::error_code ec, std::string_view what, std::string_view diagnostics)
 {
-    // Don't report on canceled operations
+    // 不要上报被取消的操作
     if (ec == boost::asio::error::operation_aborted)
         return;
 

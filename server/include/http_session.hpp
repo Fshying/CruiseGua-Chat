@@ -14,12 +14,12 @@
 
 namespace chat {
 
-// Forward declaration
+// 前向声明
 class shared_state;
 
-// Runs a HTTP session until the connection is closed or an error is encountered.
-// This will serve static files over HTTP or run a websocket session, depending
-// on what the client requested.
+// 运行一个 HTTP 会话，直到连接关闭或遇到错误。
+// 视客户端请求的内容，它会通过 HTTP 提供静态文件，
+// 或者运行一个 websocket 会话。
 boost::asio::awaitable<void> run_http_session(
     boost::asio::ip::tcp::socket&& socket,
     std::shared_ptr<shared_state> state

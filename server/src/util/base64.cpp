@@ -16,13 +16,13 @@
 
 #include "error.hpp"
 
-// This code has been copied and adapted from Boost.Beast implementation, since the
-// interface is not public.
+// 这段代码复制并改编自 Boost.Beast 的实现，
+// 因为其接口并未公开。
 
 using namespace chat;
 using boost::system::result;
 
-// Number of bytes of expected padding for a given input data length
+// 给定输入数据长度时，预期的填充字节数
 static std::size_t get_padding(std::size_t data_length) noexcept
 {
     switch (data_length % 3)
@@ -33,13 +33,13 @@ static std::size_t get_padding(std::size_t data_length) noexcept
     }
 }
 
-// Returns the max number of bytes needed to encode a string
+// 返回编码一个字符串所需的最大字节数
 static constexpr std::size_t encoded_size(std::size_t n) noexcept { return 4 * ((n + 2) / 3); }
 
-// Returns the max number of bytes needed to decode a base64 string
+// 返回解码一个 base64 字符串所需的最大字节数
 static constexpr std::size_t decoded_size(std::size_t n) noexcept { return (n + 4) / 4 * 3; }
 
-// Forward table
+// 正向查表
 static constexpr char alphabet[] = {
     "ABCDEFGHIJKLMNOP"
     "QRSTUVWXYZabcdef"
@@ -47,7 +47,7 @@ static constexpr char alphabet[] = {
     "wxyz0123456789+/"
 };
 
-// Inverse table
+// 反向查表
 static constexpr signed char inverse_tab[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  //   0-15
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  //  16-31
@@ -67,8 +67,8 @@ static constexpr signed char inverse_tab[] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1   // 240-255
 };
 
-// Encodes src and stores it in dest. dest must point to encoded_size(src.size()) bytes.
-// Returns the number of written characters
+// 编码 src 并存入 dest。dest 必须指向 encoded_size(src.size()) 字节的空间。
+// 返回实际写入的字符数
 static std::size_t encode(char* dest, std::span<const unsigned char> src, bool with_padding) noexcept
 {
     char* out = dest;
@@ -111,9 +111,8 @@ static std::size_t encode(char* dest, std::span<const unsigned char> src, bool w
     return out - dest;
 }
 
-// Decodes src and stores it in dest. dest must be decoded_size(len) bytes, at least.
-// Retuns the number of actual bytes populated in dest, and a pointer to the
-// first unparsed input character.
+// 解码 src 并存入 dest。dest 至少要有 decoded_size(len) 字节。
+// 返回实际写入 dest 的字节数，以及指向第一个未解析输入字符的指针。
 static result<std::pair<std::size_t, const char*>> decode(
     std::string_view from,
     unsigned char* dest,
@@ -160,7 +159,7 @@ static result<std::pair<std::size_t, const char*>> decode(
 
     auto out_len = out - dest;
 
-    // Check padding
+    // 检查填充
     if (with_padding)
     {
         auto expected_padding = get_padding(out_len);
@@ -178,14 +177,14 @@ static result<std::pair<std::size_t, const char*>> decode(
 
 std::string chat::base64_encode(std::span<const unsigned char> input, bool with_padding)
 {
-    // Allocate space
+    // 分配空间
     std::size_t max_size = encoded_size(input.size());
     std::string res(max_size, '\0');
 
-    // Decode
+    // 编码
     auto actual_size = encode(res.data(), input, with_padding);
 
-    // Remove excess space
+    // 去掉多余的空间
     assert(actual_size <= max_size);
     res.resize(actual_size);
 
@@ -194,21 +193,21 @@ std::string chat::base64_encode(std::span<const unsigned char> input, bool with_
 
 result<std::vector<unsigned char>> chat::base64_decode(std::string_view input, bool with_padding)
 {
-    // Allocate space
+    // 分配空间
     std::size_t max_out_size = decoded_size(input.size());
     std::vector<unsigned char> res(max_out_size, 0);
 
-    // Decode
+    // 解码
     auto decode_result = decode(input, res.data(), with_padding);
     if (decode_result.has_error())
         return decode_result.error();
     auto [out_size, last] = decode_result.value();
 
-    // Check that we consumed all the string
+    // 检查是否已消费完整个字符串
     if (last != input.data() + input.size())
         CHAT_RETURN_ERROR(errc::invalid_base64)
 
-    // Remove any extra space
+    // 去掉多余的空间
     res.resize(out_size);
 
     return res;

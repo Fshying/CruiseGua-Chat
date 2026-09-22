@@ -19,53 +19,52 @@
 
 #include "business_types.hpp"
 
-// A high-level, specialized MySQL client. It implements the operations
-// required by our server, abstracting away the actual SQL operations.
+// 一个高层、专用的 MySQL 客户端。它实现服务器所需的各种操作，
+// 把实际的 SQL 操作抽象掉。
 
 namespace chat {
 
-// Using an interface to reduce build times and improve testability
+// 使用接口是为了缩短编译时间并提高可测试性
 class mysql_client
 {
 public:
     virtual ~mysql_client() {}
 
-    // Starts the MySQL connection pool task, in detached mode. This must be called once
-    // to allow other operations to make progress and keep the reconnection loop
-    // running
+    // 以分离（detached）模式启动 MySQL 连接池任务。此函数必须被调用一次，
+    // 其他操作才能正常推进，重连循环也才能持续运行
     virtual void start_run() = 0;
 
-    // Cancels the MySQL connection pool task. To be called at shutdown
+    // 取消 MySQL 连接池任务。在关闭时调用
     virtual void cancel() = 0;
 
-    // Creates a new user object with the given attributes.
-    // Returns the ID of the newly created object on success.
-    // Retuns errc::username_exists or errc::email_exists if the passed username
-    // or email already exist.
+    // 用给定的属性创建一个新的用户对象。
+    // 成功时返回新建对象的 ID。
+    // 如果传入的用户名或邮箱已存在，则返回 errc::username_exists
+    // 或 errc::email_exists。
     virtual boost::asio::awaitable<boost::system::result<std::int64_t>> create_user(
         std::string_view username,
         std::string_view email,
         std::string_view hashed_password
     ) = 0;
 
-    // Retrieves a user's authentication details, given the user's email.
-    // Returns errc::not_found if the user doesn't exist.
+    // 根据用户邮箱获取其认证信息。
+    // 如果用户不存在，返回 errc::not_found。
     virtual boost::asio::awaitable<boost::system::result<auth_user>> get_user_by_email(std::string_view email
     ) = 0;
 
-    // Retrieves a user by ID.
-    // Returns errc::not_found if it doesn't exist.
+    // 根据 ID 获取用户。
+    // 如果不存在，返回 errc::not_found。
     virtual boost::asio::awaitable<boost::system::result<user>> get_user_by_id(std::int64_t user_id) = 0;
 
-    // Retrieves the usernames associated to the passed user_ids.
-    // The lookup is performed in batch, for efficiency reasons.
-    // If a user ID doesn't exist, it's excluded from the returned map.
+    // 获取传入的 user_ids 对应的用户名。
+    // 出于效率考虑，查询以批量方式进行。
+    // 如果某个用户 ID 不存在，则不会出现在返回的映射中。
     virtual boost::asio::awaitable<boost::system::result<username_map>> get_usernames(
         std::span<const std::int64_t> user_ids
     ) = 0;
 };
 
-// Creates a concrete implementation of mysql_client
+// 创建 mysql_client 的具体实现
 std::unique_ptr<mysql_client> create_mysql_client(boost::asio::any_io_executor ex);
 
 }  // namespace chat

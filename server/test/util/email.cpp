@@ -11,7 +11,7 @@
 
 #include <string_view>
 
-// Source: https://gist.github.com/cjaoude/fd9910626629b53c4d25
+// 来源：https://gist.github.com/cjaoude/fd9910626629b53c4d25
 
 using namespace chat;
 
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(is_email_valid)
         "email@example.museum",
         "email@example.co.jp",
         "firstname-lastname@example.com",
-        "\xc3\xb1@example.com",  // spanish enye, UTF-8 encoded
+        "\xc3\xb1@example.com",  // 西班牙语的 ñ，UTF-8 编码
     };
 
     for (auto tc : test_cases)

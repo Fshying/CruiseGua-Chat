@@ -5,8 +5,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-// Unit test main function. We use this formula, instead of BOOST_TEST_MODULE,
-// to allow precompiling <boost/test/unit_test.hpp>
+// 单元测试的 main 函数。我们采用这种写法而不是 BOOST_TEST_MODULE，
+// 是为了能够预编译 <boost/test/unit_test.hpp>
 
 #include <boost/test/unit_test.hpp>
 

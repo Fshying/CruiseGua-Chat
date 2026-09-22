@@ -25,23 +25,23 @@ using boost::system::error_code;
 BOOST_AUTO_TEST_SUITE(api_types)
 
 //
-// Incoming types
+// 入站类型
 //
 
 // create_account_request
 BOOST_AUTO_TEST_CASE(create_account_request_from_json)
 {
-    // Data
+    // 数据
     const char* from = R"%({
         "username": "somenick",
         "email": "test@test.com",
         "password": "Useruser10!"
     })%";
 
-    // Call the function
+    // 调用函数
     auto result = create_account_request::from_json(from);
 
-    // Validate
+    // 校验结果
     BOOST_TEST_REQUIRE(result.error() == error_code());
     BOOST_TEST(result->username == "somenick");
     BOOST_TEST(result->email == "test@test.com");
@@ -51,16 +51,16 @@ BOOST_AUTO_TEST_CASE(create_account_request_from_json)
 // login_request
 BOOST_AUTO_TEST_CASE(login_request_from_json)
 {
-    // Data
+    // 数据
     const char* from = R"%({
         "email": "test@test.com",
         "password": "Useruser10!"
     })%";
 
-    // Call the function
+    // 调用函数
     auto result = login_request::from_json(from);
 
-    // Validate
+    // 校验结果
     BOOST_TEST_REQUIRE(result.error() == error_code());
     BOOST_TEST(result->email == "test@test.com");
     BOOST_TEST(result->password == "Useruser10!");
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(login_request_from_json)
 // parse_client_event
 BOOST_AUTO_TEST_CASE(parse_client_event_messages_success)
 {
-    // Data
+    // 数据
     const char* input = R"%({
         "type": "clientMessages",
         "payload": {
@@ -80,10 +80,10 @@ BOOST_AUTO_TEST_CASE(parse_client_event_messages_success)
         }
     })%";
 
-    // Call the function
+    // 调用函数
     auto evt_variant = parse_client_event(input);
 
-    // Validate
+    // 校验结果
     const auto& evt = boost::variant2::get<client_messages_event>(evt_variant);
     BOOST_TEST(evt.roomId == "myRoom");
     BOOST_TEST(evt.messages.size() == 1u);
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(parse_client_event_messages_success)
 
 BOOST_AUTO_TEST_CASE(parse_client_event_request_room_history_success)
 {
-    // Data
+    // 数据
     const char* input = R"%({
         "type": "requestRoomHistory",
         "payload": {
@@ -101,10 +101,10 @@ BOOST_AUTO_TEST_CASE(parse_client_event_request_room_history_success)
         }
     })%";
 
-    // Call the function
+    // 调用函数
     auto evt_variant = parse_client_event(input);
 
-    // Validate
+    // 校验结果
     const auto& evt = boost::variant2::get<request_room_history_event>(evt_variant);
     BOOST_TEST(evt.roomId == "myRoom");
     BOOST_TEST(evt.firstMessageId == "100-0");
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(parse_client_event_request_room_history_success)
 
 BOOST_AUTO_TEST_CASE(parse_client_event_error_missing_key)
 {
-    // Data
+    // 数据
     const char* input = R"%({
         "type": "clientMessages",
         "payload": {
@@ -120,17 +120,17 @@ BOOST_AUTO_TEST_CASE(parse_client_event_error_missing_key)
         }
     })%";
 
-    // Call the function
+    // 调用函数
     auto evt_variant = parse_client_event(input);
 
-    // Validate
+    // 校验结果
     auto ec = boost::variant2::get<error_code>(evt_variant);
     BOOST_TEST(ec == error_code(boost::json::error::size_mismatch));
 }
 
 BOOST_AUTO_TEST_CASE(parse_client_event_error_unknown_type)
 {
-    // Data
+    // 数据
     const char* input = R"%({
         "type": "bad",
         "payload": {
@@ -138,28 +138,28 @@ BOOST_AUTO_TEST_CASE(parse_client_event_error_unknown_type)
         }
     })%";
 
-    // Call the function
+    // 调用函数
     auto evt_variant = parse_client_event(input);
 
-    // Validate
+    // 校验结果
     auto ec = boost::variant2::get<error_code>(evt_variant);
     BOOST_TEST(ec == error_code(errc::websocket_parse_error));
 }
 
 //
-// Outgoing types
+// 出站类型
 //
 
 // api_error
 BOOST_AUTO_TEST_CASE(api_error_to_json)
 {
-    // Data
+    // 数据
     api_error err{api_error_id::email_exists, "Something happened"};
 
-    // Call the function
+    // 调用函数
     auto serialized = err.to_json();
 
-    // Validate
+    // 校验结果
     const char* expected = R"%({
         "id": "EMAIL_EXISTS",
         "message": "Something happened"
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(api_error_to_json)
 // hello_event
 BOOST_AUTO_TEST_CASE(hello_event_to_json)
 {
-    // Data
+    // 数据
     message_batch room1_history{
         {
          {"100-0", "hello room 1!", parse_timestamp(123), 11},
@@ -190,10 +190,10 @@ BOOST_AUTO_TEST_CASE(hello_event_to_json)
     user me{12, "username2"};
     hello_event evt{me, rooms, usernames};
 
-    // Call the function
+    // 调用函数
     auto serialized = evt.to_json();
 
-    // Validate
+    // 校验结果
     const char* expected = R"%({
         "type": "hello",
         "payload": {
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(hello_event_to_json)
 // sever_messages_event
 BOOST_AUTO_TEST_CASE(server_messages_event_to_json)
 {
-    // Data
+    // 数据
     std::vector<message> msgs{
         {"100-0", "hello room 1!", parse_timestamp(123), 11},
         {"101-0", "hello back!",   parse_timestamp(125), 11},
@@ -238,10 +238,10 @@ BOOST_AUTO_TEST_CASE(server_messages_event_to_json)
     user sending_user{11, "username1"};
     server_messages_event evt{"myRoom", sending_user, msgs};
 
-    // Call the function
+    // 调用函数
     auto serialized = evt.to_json();
 
-    // Validate
+    // 校验结果
     const char* expected = R"%({
         "type": "serverMessages",
         "payload": {
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(server_messages_event_to_json)
 // room_history_event
 BOOST_AUTO_TEST_CASE(room_history_event_to_json)
 {
-    // Data
+    // 数据
     message_batch msg_batch{
         {
          {"100-0", "hello room 1!", parse_timestamp(123), 11},
@@ -280,10 +280,10 @@ BOOST_AUTO_TEST_CASE(room_history_event_to_json)
     };
     room_history_event evt{"myRoom", msg_batch, usernames};
 
-    // Call the function
+    // 调用函数
     auto serialized = evt.to_json();
 
-    // Validate
+    // 校验结果
     const char* expected = R"%({
         "type": "roomHistory",
         "payload": {

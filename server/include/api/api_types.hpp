@@ -18,164 +18,161 @@
 
 #include "business_types.hpp"
 
-// This file contains type definitions for HTTP and websocket API objects.
-// Types for incoming requests are owning, since they're used after parsing,
-// and match exactly the types and field names in the API.
-// Types for responses and outgoing events are non-owning and lightweight,
-// since they are only used as intermediate types for serialization.
-// They do not have the exact same field names and types as the actual
-// API messages, but instead contain enough information to produce them.
-// This saves copies.
+// 本文件包含 HTTP 与 websocket API 对象的类型定义。
+// 入站请求的类型是「拥有型」（owning），因为它们要在解析之后继续使用，
+// 并且与 API 中的类型和字段名完全一致。
+// 响应与出站事件的类型是非拥有型且轻量的，
+// 因为它们只作为序列化过程中的中间类型使用。
+// 它们的字段名和类型并不与实际 API 消息完全一致，
+// 而是只包含足以生成这些消息的信息，以此避免多余的拷贝。
 
 namespace chat {
 
 //
-// Incoming messages (HTTP requests and websocket client events)
+// 入站消息（HTTP 请求与 websocket 客户端事件）
 //
 
-// The request for POST /create-account
+// POST /create-account 的请求
 struct create_account_request
 {
-    // Username of the user to create
+    // 要创建的用户的用户名
     std::string username;
 
-    // Email (login identifier) of the new user.
+    // 新用户的邮箱（登录标识）。
     std::string email;
 
-    // Password to use.
+    // 使用的密码。
     std::string password;
 
-    // Parses a request from a JSON string
+    // 从 JSON 字符串解析出请求
     static boost::system::result<create_account_request> from_json(std::string_view from);
 };
 
-// The request for POST /login
+// POST /login 的请求
 struct login_request
 {
-    // Email (login identifier) of the user to authenticate.
+    // 待认证用户的邮箱（登录标识）。
     std::string email;
 
-    // Password to use.
+    // 使用的密码。
     std::string password;
 
-    // Parses a request from a JSON string
+    // 从 JSON 字符串解析出请求
     static boost::system::result<login_request> from_json(std::string_view from);
 };
 
-// A message as sent by the client
+// 客户端发送的一条消息
 struct client_message
 {
     std::string content;
 };
 
-// Sent by the client as a request to broadcast messages to other clients
-// in a room
+// 客户端发送的、请求把消息广播给房间内其他客户端的事件
 struct client_messages_event
 {
     std::string roomId;
     std::vector<client_message> messages;
 };
 
-// Sent by the client to request more history for a certain room.
+// 客户端发送的、请求某个房间更多历史记录的事件。
 struct request_room_history_event
 {
     std::string roomId;
 
-    // ID of the earliest-in-time message that the client has.
-    // This is a pagination mechanism.
+    // 客户端已持有的、时间最早的那条消息的 ID。
+    // 这是一种分页机制。
     std::string firstMessageId;
 };
 
-// A variant that can represent any event that may be received from the client,
-// or an error_code, if the client sent an invalid message
+// 一个 variant，可以表示从客户端收到的任意事件；
+// 如果客户端发送了非法消息，则表示为 error_code
 using any_client_event = boost::variant2::variant<
-    boost::system::error_code,  // Invalid, used to report errors
+    boost::system::error_code,  // 非法，用于上报错误
     client_messages_event,
     request_room_history_event>;
 
-// Parses a message received from the websocket client into a variant
-// holding any of the valid client-side events.
+// 把从 websocket 客户端收到的消息解析成一个 variant，
+// 其中保存任意一种合法的客户端事件。
 any_client_event parse_client_event(std::string_view from);
 
 //
-// Outgoing messages (HTTP responses and server events)
+// 出站消息（HTTP 响应与服务器事件）
 //
 
-// Used within api_error, as a way to communicate specific error conditions
-// to the client.
+// 在 api_error 中使用，用于把具体的错误情况告知客户端。
 enum class api_error_id
 {
-    // generic, when there is not a more specific error ID
+    // 通用错误，适用于没有更具体错误 ID 的情况
     bad_request = 0,
 
-    // A login attempt failed (e.g. bad username or password)
+    // 登录尝试失败（例如用户名或密码错误）
     login_failed,
 
-    // Failure during account creation, the selected email already exists
+    // 创建账号失败，所选邮箱已存在
     email_exists,
 
-    // Failure during account creation, the selected username already exists
+    // 创建账号失败，所选用户名已存在
     username_exists,
 };
 
-// A REST API error. Used within HTTP error responses.
+// 一个 REST API 错误。用于 HTTP 错误响应中。
 struct api_error
 {
-    // An identifier for the error that occurred.
+    // 所发生错误的标识符。
     api_error_id error_id;
 
-    // A human-readable explanation of the error.
+    // 人类可读的错误说明。
     std::string_view error_message;
 
-    // Serializes the object as a JSON string.
+    // 把对象序列化为 JSON 字符串。
     std::string to_json() const;
 };
 
-// Sent to the client when it connects
+// 客户端连接时发送给它的事件
 struct hello_event
 {
-    // The current authenticated user
+    // 当前已认证的用户
     const user& me;
 
-    // The list of chat rooms, with some message history
+    // 聊天室列表，附带部分消息历史
     std::span<const room> rooms;
 
-    // A user_id -> username map, to resolve user IDs into usernames
+    // 用户 ID -> 用户名的映射，用于把用户 ID 解析成用户名
     const username_map& usernames;
 
-    // Serializes the object as a JSON string.
+    // 把对象序列化为 JSON 字符串。
     std::string to_json() const;
 };
 
-// Broadcast by the server to all clients in a room to signal that some messages arrived
+// 服务器广播给房间内所有客户端，用于通知有新消息到达
 struct server_messages_event
 {
-    // The room ID
+    // 房间 ID
     std::string_view room_id;
 
-    // The user that sent the messages
+    // 发送这些消息的用户
     const user& sending_user;
 
-    // The actual messages. All messages must have this->user_id == sending_user.id
+    // 实际的消息。所有消息都必须满足 this->user_id == sending_user.id
     std::span<const message> messages;
 
-    // Serializes the object as a JSON string.
+    // 把对象序列化为 JSON 字符串。
     std::string to_json() const;
 };
 
-// Sent to the client as a response to a request_room_history_event
+// 作为 request_room_history_event 的响应发送给客户端
 struct room_history_event
 {
-    // The room ID
+    // 房间 ID
     std::string_view room_id;
 
-    // The actual messages
+    // 实际的消息
     const message_batch& history;
 
-    // A user_id -> username map, to resolve user IDs into usernames
+    // 用户 ID -> 用户名的映射，用于把用户 ID 解析成用户名
     const username_map& usernames;
 
-    // Serializes the object as a JSON string.
+    // 把对象序列化为 JSON 字符串。
     std::string to_json() const;
 };
 

@@ -13,9 +13,9 @@
 static constexpr std::string_view email_regex_str =
     R"REGEX(^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$)REGEX";
 
-// Emails may contain Unicode characters. We use a Unicode-aware regular
-// expression to validate them. This requires ICU support. If you don't need
-// Unicode support, you can use plain boost::regex or std::regex, instead
+// 邮箱可能包含 Unicode 字符。我们使用支持 Unicode 的正则表达式
+// 来校验它。这需要 ICU 支持。如果不需要
+// Unicode 支持，可以改用普通的 boost::regex 或 std::regex
 static const auto email_regex = boost::make_u32regex(
     email_regex_str.begin(),
     email_regex_str.end(),

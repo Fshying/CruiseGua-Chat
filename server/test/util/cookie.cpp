@@ -19,18 +19,18 @@ BOOST_AUTO_TEST_CASE(set_cookie_builder_success)
 {
     std::chrono::seconds max_age{120};
 
-    // Regular case
+    // 常规情况
     BOOST_TEST(
         set_cookie_builder("cookie_name", "cookie_value").build_header() == "cookie_name=cookie_value"
     );
 
-    // Values with certain special chars are allowed
+    // 值中可以包含某些特殊字符
     BOOST_TEST(
         set_cookie_builder("cookie_name", "val=!uewith%char$s").build_header() ==
         "cookie_name=val=!uewith%char$s"
     );
 
-    // Individual attributes
+    // 各个属性单独设置
     BOOST_TEST(set_cookie_builder("name", "val").http_only(true).build_header() == "name=val; HttpOnly");
     BOOST_TEST(set_cookie_builder("name", "val").secure(true).build_header() == "name=val; Secure");
     BOOST_TEST(set_cookie_builder("name", "val").max_age(max_age).build_header() == "name=val; Max-Age=120");
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(set_cookie_builder_success)
         "name=val; SameSite=None"
     );
 
-    // Specifying all attributes works
+    // 同时指定所有属性也可以正常工作
     BOOST_TEST(
         set_cookie_builder("name", "val")
             .http_only(true)

@@ -21,7 +21,7 @@ namespace asio = boost::asio;
 
 BOOST_AUTO_TEST_SUITE(pubsub_service_)
 
-// A subscriber implementation that just records the messages it receives
+// 一个订阅者实现，只记录收到的消息
 struct stub_subscriber final : public message_subscriber
 {
     std::vector<std::string> messages;
@@ -44,8 +44,8 @@ struct fixture
     std::shared_ptr<stub_subscriber> sub1{create_subscriber()};
     std::shared_ptr<stub_subscriber> sub2{create_subscriber()};
 
-    // Cleans previous state, publishes a message, and runs the I/O context
-    // so that subscription callbacks are called
+    // 清理之前的状态，发布一条消息，然后运行 I/O 上下文，
+    // 以便触发订阅回调
     void publish_and_run(std::string_view topic_id, std::string msg)
     {
         sub1->messages.clear();
@@ -58,30 +58,30 @@ struct fixture
 
 BOOST_FIXTURE_TEST_CASE(publish, fixture)
 {
-    // Data
+    // 数据
     constexpr std::string_view sub1_topics[] = {"r1", "r2"};
     constexpr std::string_view sub2_topics[] = {"r3", "r1"};
 
-    // Subscibe
+    // 订阅
     pubsub->subscribe(sub1, sub1_topics);
     pubsub->subscribe(sub2, sub2_topics);
 
-    // Publish on topic r1
+    // 向主题 r1 发布
     publish_and_run("r1", "some message");
     BOOST_TEST(sub1->messages == string_vector{"some message"});
     BOOST_TEST(sub2->messages == string_vector{"some message"});
 
-    // Publish on topic r2
+    // 向主题 r2 发布
     publish_and_run("r2", "another message");
     BOOST_TEST(sub1->messages == string_vector{"another message"});
     BOOST_TEST(sub2->messages == string_vector{});
 
-    // Publish on topic r3
+    // 向主题 r3 发布
     publish_and_run("r3", "more messages here!");
     BOOST_TEST(sub1->messages == string_vector{});
     BOOST_TEST(sub2->messages == string_vector{"more messages here!"});
 
-    // Publish to a topic no-one is subscribed to
+    // 向没有任何人订阅的主题发布
     publish_and_run("unknown", "this message will get to noone");
     BOOST_TEST(sub1->messages == string_vector{});
     BOOST_TEST(sub2->messages == string_vector{});
@@ -89,46 +89,46 @@ BOOST_FIXTURE_TEST_CASE(publish, fixture)
 
 BOOST_FIXTURE_TEST_CASE(unsubscribe, fixture)
 {
-    // Data
+    // 数据
     constexpr std::string_view topic_ids[] = {"r1", "r2"};
 
-    // Subscribe
+    // 订阅
     pubsub->subscribe(sub1, topic_ids);
 
-    // Messages are received
+    // 能收到消息
     publish_and_run("r1", "some message");
     BOOST_TEST(sub1->messages == string_vector{"some message"});
 
-    // Unsubscribe
+    // 取消订阅
     pubsub->unsubscribe(*sub1);
 
-    // Messages are no longer received
+    // 不再收到消息
     publish_and_run("r1", "some message");
     BOOST_TEST(sub1->messages == string_vector{});
 }
 
-// Edge case: we don't crash if we try to remove a subscriber that it's not there
+// 边界情况：试图移除一个并不存在的订阅者时不应崩溃
 BOOST_FIXTURE_TEST_CASE(remove_session_not_present, fixture)
 {
     BOOST_CHECK_NO_THROW(pubsub->unsubscribe(*sub1));
 }
 
-// RAII-style subscribe
+// RAII 风格的订阅
 BOOST_FIXTURE_TEST_CASE(subscribe_guarded, fixture)
 {
-    // Data
+    // 数据
     constexpr std::string_view topic_ids[] = {"r1", "r2"};
 
     {
-        // Subscribe
+        // 订阅
         auto guard = pubsub->subscribe_guarded(sub1, topic_ids);
 
-        // Messages are received
+        // 能收到消息
         publish_and_run("r1", "some message");
         BOOST_TEST(sub1->messages == string_vector{"some message"});
     }
 
-    // After the guard goes out of scope, the subscriber is removed
+    // guard 离开作用域后，订阅者会被移除
     publish_and_run("r1", "some message");
     BOOST_TEST(sub1->messages == string_vector{});
 }

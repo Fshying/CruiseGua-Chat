@@ -124,16 +124,16 @@ BOOST_AUTO_TEST_CASE(phc_serialize)
 
 BOOST_AUTO_TEST_CASE(generate_hash)
 {
-    // Hashing with n=16 consumes too much memory
+    // 用 n=16 做哈希会消耗过多内存
     constexpr std::array<unsigned char, hash_size> expected{
         127, 67,  110, 163, 145, 163, 201, 126, 39,  101, 224, 211, 113, 160, 89, 242,
         192, 191, 37,  112, 19,  70,  167, 73,  168, 158, 74,  71,  219, 195, 5,  85,
     };
 
-    // Encode a password. Non-ASCII characters supported.
+    // 对密码做哈希。支持非 ASCII 字符。
     auto value = scrypt_generate_hash("p!ass\0word\xc3\xb1"sv, scrypt_params{13, 8, 1}, salt);
 
-    // Verify
+    // 校验
     BOOST_TEST(value == expected);
 }
 

@@ -33,19 +33,19 @@ using boost::system::result;
 
 struct websocket::impl
 {
-    // The actual websocket
+    // 真正的 websocket 对象
     beast::websocket::stream<beast::tcp_stream> ws;
 
-    // The upgrade HTTP request
+    // 用于升级协议的 HTTP 请求
     websocket::upgrade_request_type upgrade_request;
 
-    // Buffer to read data from the client
+    // 读取客户端数据的缓冲区
     beast::flat_buffer read_buffer;
 
-    // Mutex to serialize writes
+    // 用于把写操作串行化的互斥量
     async_mutex write_mtx_;
 
-    // Make sure that we don't issue two reads concurrently
+    // 确保不会同时发起两个读操作
     bool reading{false};
 
     impl(
@@ -60,7 +60,7 @@ struct websocket::impl
     {
     }
 
-    // Sets and clears the reading flag using RAII
+    // 用 RAII 方式设置和清除 reading 标志
     struct read_guard_deleter
     {
         void operator()(impl* self) const noexcept { self->reading = false; }
@@ -100,10 +100,10 @@ const websocket::upgrade_request_type& websocket::upgrade_request() const noexce
 
 asio::awaitable<error_code> websocket::accept()
 {
-    // Set suggested timeout settings for the websocket
+    // 为 websocket 设置建议的超时参数
     impl_->ws.set_option(beast::websocket::stream_base::timeout::suggested(beast::role_type::server));
 
-    // Set a decorator to change the Server of the handshake
+    // 设置装饰器，用于修改握手响应中的 Server 字段
     impl_->ws.set_option(beast::websocket::stream_base::decorator([](beast::websocket::response_type& res) {
         res.set(
             beast::http::field::server,
@@ -111,7 +111,7 @@ asio::awaitable<error_code> websocket::accept()
         );
     }));
 
-    // Accept the websocket handshake
+    // 接受 websocket 握手
     auto [ec] = co_await impl_->ws.async_accept(impl_->upgrade_request, asio::as_tuple);
     co_return ec;
 }
@@ -122,18 +122,18 @@ asio::awaitable<result<std::string_view>> websocket::read()
 
     error_code ec;
 
-    // Perform the read
+    // 执行读取
     {
         auto guard = impl_->lock_reads();
         impl_->read_buffer.clear();
         co_await impl_->ws.async_read(impl_->read_buffer, asio::redirect_error(ec));
     }
 
-    // Check the result
+    // 检查结果
     if (ec)
         co_return ec;
 
-    // Convert it to a string_view (no copy is performed)
+    // 转换成 string_view（不会发生拷贝）
     co_return buffer_to_sv(impl_->read_buffer.data());
 }
 
@@ -141,7 +141,7 @@ asio::awaitable<error_code> websocket::write_locked_impl(std::string_view buff)
 {
     assert(impl_->write_mtx_.locked());
 
-    // Perform the write
+    // 执行写入
     error_code ec;
     co_await impl_->ws.async_write(asio::buffer(buff), asio::redirect_error(ec));
     co_return ec;
@@ -149,10 +149,10 @@ asio::awaitable<error_code> websocket::write_locked_impl(std::string_view buff)
 
 asio::awaitable<error_code> websocket::write(std::string_view message)
 {
-    // Wait for the connection to become iddle
+    // 等待连接变为空闲
     auto guard = co_await lock_writes();
 
-    // Write
+    // 写入
     co_return co_await write_locked(message, guard);
 }
 

@@ -18,17 +18,17 @@
 
 namespace chat {
 
-// An asynchronous mutex to guarantee mutual exclusion in async code. This is
-// similar to Python's asyncio.Mutex. Note that this is not thread-safe - it
-// ensures mutual exclusion between coroutines.
-// TODO: this probably can be simplified
+// 一个异步互斥量，用于在异步代码中保证互斥。它类似
+// Python 的 asyncio.Mutex。注意它不是线程安全的——
+// 它保证的是协程之间的互斥。
+// TODO：这里大概可以再简化
 class async_mutex
 {
-    // Is the mutex locked?
+    // 互斥量是否已被锁定？
     bool locked_{false};
 
-    // Acts as a condition variable, so that coroutines waiting to acquire
-    // the mutex can be notified when another coroutine releases it
+    // 充当条件变量，使得等待获取互斥量的协程
+    // 能在别的协程释放它时收到通知
     boost::asio::experimental::channel<void(boost::system::error_code)> chan_;
 
     struct guard_deleter
@@ -37,7 +37,7 @@ class async_mutex
     };
 
 public:
-    // Constructors, assignments, destructor
+    // 构造函数、赋值运算符、析构函数
     async_mutex(boost::asio::any_io_executor ex) : chan_(std::move(ex)) {}
     async_mutex(const async_mutex&) = delete;
     async_mutex(async_mutex&&) = default;
@@ -45,26 +45,26 @@ public:
     async_mutex& operator=(async_mutex&&) = default;
     ~async_mutex() = default;
 
-    // Is the mutex locked?
+    // 互斥量是否已被锁定？
     bool locked() const noexcept { return locked_; }
 
-    // Suspends the current coroutine until the mutex can be acquired, then acquire it
+    // 挂起当前协程，直到能够获取互斥量，然后获取它
     boost::asio::awaitable<void> lock()
     {
-        // Most of the time this loop will be executed zero times (if unlocked)
-        // or once (if locked). Race conditions could make another coroutine, different
-        // from the one waked by async_receive, acquire the lock before it. This loop guards against it.
+        // 大多数情况下这个循环会执行零次（未锁定时）
+        // 或一次（已锁定时）。竞态条件可能导致某个并非由 async_receive
+        // 唤醒的协程抢先获得锁，这个循环就是用来防止这种情况的。
         while (locked_)
         {
-            // Wait to be notified
+            // 等待通知
             co_await chan_.async_receive();
         }
 
-        // Mark as locked
+        // 标记为已锁定
         locked_ = true;
     }
 
-    // Try to acquire without suspending
+    // 尝试获取，但不挂起
     bool try_lock() noexcept
     {
         if (locked_)
@@ -73,14 +73,14 @@ public:
         return true;
     }
 
-    // Unlock. The mutex must be locked
+    // 解锁。调用时互斥量必须处于已锁定状态
     void unlock() noexcept
     {
-        // Unlock
+        // 解锁
         assert(locked_);
         locked_ = false;
 
-        // Notify any waiting coroutines
+        // 通知所有正在等待的协程
         chan_.try_send(boost::system::error_code());
     }
 

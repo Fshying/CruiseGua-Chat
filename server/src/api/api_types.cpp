@@ -32,16 +32,15 @@ using boost::system::result;
 namespace chat {
 
 //
-// BOOST_DESCRIBE_STRUCT is used to add reflection capabilities to structs.
-// It's used by boost::json::value_to, value_from and try_value_from to
-// automatically generate JSON parsing/serializing code.
+// BOOST_DESCRIBE_STRUCT 用于给结构体加上反射能力。
+// boost::json 的 value_to、value_from 和 try_value_from 会借助它
+// 自动生成 JSON 解析/序列化代码。
 //
-// Describe metadata is defined in this .cpp file to reduce build times.
-// Care must be taken to not redefine this metadata in other files, which is
-// an ODR violation.
+// Describe 元数据定义在这个 .cpp 文件里，以缩短编译时间。
+// 必须注意不要在其他文件里重复定义这些元数据，那会造成 ODR 违规。
 //
-// We only need such metadata on incoming types, since these are an exact
-// representation of the wire format used by the client.
+// 我们只需要给入站类型加这种元数据，因为它们与客户端使用的
+// 线格式（wire format）是完全一致的表示。
 //
 
 BOOST_DESCRIBE_STRUCT(create_account_request, (), (username, email, password))
@@ -54,10 +53,10 @@ BOOST_DESCRIBE_STRUCT(request_room_history_event, (), (roomId, firstMessageId))
 
 namespace {
 
-// We also define some helper structs with Describe metadata for outgoing
-// types. This makes serialization code easier.
+// 我们也为出站类型定义了一些带 Describe 元数据的辅助结构体，
+// 这样序列化代码写起来更简单。
 
-// API error wire format
+// API 错误的线格式
 struct wire_api_error
 {
     std::string_view id;
@@ -65,7 +64,7 @@ struct wire_api_error
 };
 BOOST_DESCRIBE_STRUCT(wire_api_error, (), (id, message))
 
-// User wire format
+// 用户的线格式
 struct wire_user
 {
     std::int64_t id;
@@ -73,7 +72,7 @@ struct wire_user
 };
 BOOST_DESCRIBE_STRUCT(wire_user, (), (id, username))
 
-// Server message wire format
+// 服务器消息的线格式
 struct wire_server_message
 {
     std::string_view id;
@@ -86,20 +85,20 @@ BOOST_DESCRIBE_STRUCT(wire_server_message, (), (id, content, user, timestamp))
 }  // namespace
 
 //
-// Incoming types (HTTP requests, websocket client events)
+// 入站类型（HTTP 请求、websocket 客户端事件）
 //
 
-// Helper for HTTP requests
+// HTTP 请求的辅助函数
 template <class RequestType>
 static result<RequestType> parse_generic_request(std::string_view from)
 {
-    // Parse the JSON
+    // 解析 JSON
     error_code ec;
     auto msg = boost::json::parse(from, ec);
     if (ec)
         CHAT_RETURN_ERROR(ec)
 
-    // Parse into the struct
+    // 解析进结构体
     return boost::json::try_value_to<RequestType>(msg);
 }
 
@@ -117,12 +116,12 @@ chat::any_client_event chat::parse_client_event(std::string_view from)
 {
     error_code ec;
 
-    // Parse the JSON
+    // 解析 JSON
     auto msg = boost::json::parse(from, ec);
     if (ec)
         CHAT_RETURN_ERROR(ec)
 
-    // Get the message type
+    // 取出消息类型
     const auto* obj = msg.if_object();
     if (!obj)
         CHAT_RETURN_ERROR(errc::websocket_parse_error)
@@ -131,16 +130,16 @@ chat::any_client_event chat::parse_client_event(std::string_view from)
         CHAT_RETURN_ERROR(errc::websocket_parse_error)
     const auto& type = it->value();
 
-    // Get the payload
+    // 取出 payload
     it = obj->find("payload");
     if (it == obj->end())
         CHAT_RETURN_ERROR(errc::websocket_parse_error)
     const auto& payload = it->value();
 
-    // Parse the message, depending on its type
+    // 按消息类型分别解析
     if (type == "clientMessages")
     {
-        // Parse the payload
+        // 解析 payload
         auto parsed_payload = boost::json::try_value_to<client_messages_event>(payload);
         if (parsed_payload.has_error())
             CHAT_RETURN_ERROR(parsed_payload.error())
@@ -148,7 +147,7 @@ chat::any_client_event chat::parse_client_event(std::string_view from)
     }
     else if (type == "requestRoomHistory")
     {
-        // Parse the payload
+        // 解析 payload
         auto parsed_payload = boost::json::try_value_to<request_room_history_event>(payload);
         if (parsed_payload.has_error())
             CHAT_RETURN_ERROR(parsed_payload.error())
@@ -156,13 +155,13 @@ chat::any_client_event chat::parse_client_event(std::string_view from)
     }
     else
     {
-        // Unknown typpe
+        // 未知类型
         CHAT_RETURN_ERROR(errc::websocket_parse_error)
     }
 }
 
 //
-// Outgoing types (HTTP responses, websocket server events)
+// 出站类型（HTTP 响应、websocket 服务器事件）
 //
 
 static std::string_view to_string(api_error_id input)
@@ -199,7 +198,7 @@ static boost::json::array serialize_messages(std::span<const message> messages, 
     res.reserve(messages.size());
     for (const auto& msg : messages)
     {
-        // Lookup the username in the map. Default to empty if not found
+        // 在映射中查找用户名。找不到时默认为空
         auto it = usernames.find(msg.user_id);
         auto username = it == usernames.end() ? std::string_view() : std::string_view(it->second);
 
@@ -241,16 +240,16 @@ static std::string serialize_event(std::string_view type, boost::json::object pa
 
 std::string hello_event::to_json() const
 {
-    // Current user
+    // 当前用户
     auto json_me = boost::json::value_from(wire_user{me.id, me.username});
 
-    // Rooms
+    // 房间
     boost::json::array json_rooms;
     json_rooms.reserve(rooms.size());
     for (const auto& room : rooms)
         json_rooms.push_back(serialize_room(room, usernames));
 
-    // Event
+    // 事件
     boost::json::object payload;
     payload.emplace("me", std::move(json_me));
     payload.emplace("rooms", std::move(json_rooms));

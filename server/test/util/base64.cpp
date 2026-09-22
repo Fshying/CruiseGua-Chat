@@ -19,7 +19,7 @@ using namespace chat;
 using namespace std::string_view_literals;
 using boost::system::error_code;
 
-// Some test cases have been copied from CPython's and Android's base64 test suites
+// 部分测试用例复制自 CPython 和 Android 的 base64 测试集
 
 BOOST_AUTO_TEST_SUITE(base64)
 
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(decode_success_without_padding)
 BOOST_AUTO_TEST_CASE(decode_error)
 {
     constexpr std::string_view cases[] = {
-        // Invalid characters
+        // 非法字符
         "%3d=="sv,
         "$3d=="sv,
         "[=="sv,
@@ -123,13 +123,13 @@ BOOST_AUTO_TEST_CASE(decode_error)
         "YWJj\n"sv,
         "YWJj\nYWI="sv,
 
-        // Bad padding
+        // 错误的填充
         "aGVsbG8sIHdvcmxk="sv,
         "aGVsbG8sIHdvcmxk=="sv,
         "aGVsbG8sIHdvcmxkPyE=="sv,
         "aGVsbG8sIHdvcmxkLg="sv,
 
-        // Extra bytes
+        // 多余的字节
         "AA==A"sv,
         "AA==="sv,
     };

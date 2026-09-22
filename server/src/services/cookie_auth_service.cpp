@@ -25,17 +25,17 @@ using boost::system::error_code;
 using boost::system::result;
 
 static constexpr std::string_view session_cookie_name = "sid";
-static constexpr std::chrono::seconds session_duration(3600 * 24 * 7);  // 7 days
+static constexpr std::chrono::seconds session_duration(3600 * 24 * 7);  // 7 天
 
 asio::awaitable<result<std::string>> cookie_auth_service::generate_session_cookie(std::int64_t user_id)
 {
-    // Generate a session token
+    // 生成会话令牌
     session_store store{*redis_};
     auto session_id_result = co_await store.generate_session_id(user_id, session_duration);
     if (session_id_result.has_error())
         co_return session_id_result.error();
 
-    // Generate the cookie to be set
+    // 生成要设置的 cookie
     co_return set_cookie_builder(session_cookie_name, *session_id_result)
         .http_only(true)
         .same_site(same_site_t::strict)
@@ -47,12 +47,12 @@ asio::awaitable<result<std::int64_t>> cookie_auth_service::user_id_from_cookie(
     const boost::beast::http::fields& req
 )
 {
-    // Get the Cookie header from the request
+    // 从请求中取出 Cookie 头
     auto it = req.find(http::field::cookie);
     if (it == req.end())
         CHAT_CO_RETURN_ERROR(errc::requires_auth)
 
-    // Retrieve the session cookie
+    // 取出会话 cookie
     cookie_list cookies(it->value());
     auto cookie_it = std::find_if(cookies.begin(), cookies.end(), [](const cookie_pair& p) {
         return p.name == session_cookie_name;
@@ -60,7 +60,7 @@ asio::awaitable<result<std::int64_t>> cookie_auth_service::user_id_from_cookie(
     if (cookie_it == cookies.end())
         CHAT_CO_RETURN_ERROR(errc::requires_auth)
 
-    // Look it up in Redis
+    // 到 Redis 中查询它
     session_store store{*redis_};
     auto result = co_await store.get_user_by_session(cookie_it->value);
     if (result.has_error())
